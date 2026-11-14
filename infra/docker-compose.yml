@@ -1,0 +1,30 @@
+# VEYA local infrastructure.
+# Usage (from the repository root):
+#   docker compose -f infra/docker-compose.yml up -d
+# Optional overrides: copy infra/.env.example to infra/.env and adjust.
+
+name: veya
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: veya-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${VEYA_DB_NAME:-veya}
+      POSTGRES_USER: ${VEYA_DB_USERNAME:-veya}
+      POSTGRES_PASSWORD: ${VEYA_DB_PASSWORD:-veya}
+    ports:
+      # Host port 5433 by default so it does not clash with a locally installed PostgreSQL on 5432.
+      - "${VEYA_DB_PORT:-5433}:5432"
+    volumes:
+      - veya-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  veya-postgres-data:

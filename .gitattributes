@@ -1,0 +1,14 @@
+* text=auto
+
+# Shell scripts must keep LF endings to run on Linux CI runners and in containers.
+mvnw text eol=lf
+*.sh text eol=lf
+
+# Windows scripts keep CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary documents.
+*.docx binary
+*.pdf binary
+*.png binary
