@@ -11,19 +11,19 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 
 ## Summary
 
-| ID | Topic | Blocks | Status |
+| ID | Topic | Decision (short) | Status |
 |---|---|---|---|
-| Q1 | Status code for creating a recovery proposal (201 vs 200) | US-16 API / OpenAPI | OPEN |
-| Q2 | How plan versions and their history are stored | first `planning` migration, US-10, US-14, US-18 | OPEN |
-| Q3 | Available ingredients and meal/macro data on plan items | US-07, US-10, US-15 | OPEN |
-| Q4 | Entities missing from Fig. B.11 that Must stories need | US-08, US-09, US-15, UC-01 | OPEN |
-| Q5 | Food exclusions: permanent (profile) or per day (constraint) | US-03 migration | OPEN |
-| Q6 | LEG-4 "access/export" vs export story US-36 being Could | US-04 scope | OPEN |
-| Q7 | LEG-2 explicit, recorded, versioned health-data consent | `identity` design | OPEN |
-| Q8 | GDPR Art. 8 — minimum age of users | US-01 | OPEN |
-| Q9 | Module boundaries vs Fig. B.4 / Fig. B.12 | package structure | OPEN |
-| Q10 | Content of the day summary (US-20) vs history browsing (US-21, Should) | US-20 API | OPEN |
-| Q11 | PostgreSQL 17 (project) vs reference [23] (PostgreSQL 18 docs) | none (documentation) | OPEN |
+| Q1 | Status code for creating a recovery proposal (201 vs 200) | 201 Created | AGREED |
+| Q2 | How plan versions and their history are stored | Separate immutable plan versions, each with its own items | AGREED |
+| Q3 | Available ingredients and meal/macro data on plan items | Add the required fields to the model | AGREED |
+| Q4 | Entities missing from Fig. B.11 that Must stories need | Add with the Must stories that need them | AGREED |
+| Q5 | Food exclusions: permanent (profile) or per day (constraint) | Permanent in profile, temporary in daily constraints | AGREED |
+| Q6 | LEG-4 "access/export" vs export story US-36 being Could | Minimal JSON export to satisfy LEG-4 | AGREED |
+| Q7 | LEG-2 explicit, recorded, versioned health-data consent | Separate consent record with version and time | AGREED |
+| Q8 | GDPR Art. 8 — minimum age of users | MVP registration restricted to adults | AGREED |
+| Q9 | Module boundaries vs Fig. B.4 / Fig. B.12 | Keep the CLAUDE.md module split | AGREED |
+| Q10 | Content of the day summary (US-20) vs history browsing (US-21, Should) | Follow US-20 criteria, no history browsing | AGREED |
+| Q11 | PostgreSQL 17 (project) vs reference [23] (PostgreSQL 18 docs) | Keep PostgreSQL 17 | AGREED |
 
 ---
 
@@ -35,7 +35,8 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 - **Options:** (a) 201 Created — Table 2.8 is the API contract and a proposal is a new resource;
   (b) 200 OK as in the sequence diagram.
 - **Recommendation:** (a).
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED — (a).** Creating a recovery proposal returns **201 Created**; Table 2.8
+  is the API contract. **Date:** 2026-11-14
 
 ## Q2. Storage of plan versions and history
 
@@ -50,7 +51,9 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
   (c) versioned `plan_item` rows with `valid_from_version` / `valid_to_version`.
 - **Recommendation:** decide before the first `planning` migration; (a) is the simplest to make
   transactional and to test for 409.
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED.** Plan versions are stored as separate **immutable** versions, each with
+  its own set of items. Accepting/editing a proposal or confirming a replacement creates a new
+  version; earlier versions are never modified. **Date:** 2026-11-14
 
 ## Q3. Available ingredients; meal reference and macros on plan items
 
@@ -61,7 +64,9 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 - **Options:** (a) extend the model: `available_ingredients` on the constraint, meal/exercise
   reference and macros on plan items (traced to US-03/07/10/15); (b) narrow the interpretation
   (e.g. "ingredient unavailable" is user-flagged per item) and record it here.
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED — (a).** Add the fields the Must stories need (available ingredients,
+  meal/exercise reference and macros on plan items), traced to US-03, US-07, US-10, US-15.
+  **Date:** 2026-11-14
 
 ## Q4. Entities required by Must stories but absent from Fig. B.11
 
@@ -71,7 +76,8 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 - `recoveryRequired` flag and the deviation trigger that set it — US-15 (and US-21 "triggers").
 - **Proposal:** treat these as part of the Must stories that need them (not new features) and
   extend the data model when those stories are implemented.
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED.** These entities are added incrementally, together with the Must story
+  that needs them. **Date:** 2026-11-14
 
 ## Q5. Food exclusions: permanent or per day?
 
@@ -79,7 +85,9 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
   `Profile.preferences` also exists. US-03 says "food exclusions, equipment and available time".
 - **Options:** (a) permanent exclusions/preferences on the profile, daily time/equipment on
   `PlanningConstraint`; (b) everything per day, as in Fig. B.11.
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED.** Permanent food exclusions are stored in the profile; temporary
+  (day-specific) exclusions, together with daily time and equipment, are stored in the daily
+  planning constraints. Planning applies both as hard constraints. **Date:** 2026-11-14
 
 ## Q6. LEG-4 access/export vs US-36 (Could)
 
@@ -88,7 +96,8 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 - **Options:** (a) "access" = existing authenticated GET endpoints; export deferred with a note;
   (b) minimal JSON export of the user's records as part of US-04 / LEG-4;
   (c) BA authors amend LEG-4 or US-36 priority.
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED — (b).** A minimal JSON export of the authenticated user's own records,
+  traced to LEG-4. This does not implement US-36 (CSV export, Could). **Date:** 2026-11-14
 
 ## Q7. LEG-2 consent records
 
@@ -97,7 +106,8 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 - **Options:** (a) a consent record (user, notice/consent version, timestamp) in `identity`, traced
   to LEG-2, captured at registration; (b) document that the MVP shows a privacy notice only (weak,
   since Art. 9 applies to health data).
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED — (a).** Consent is stored as a separate record with the consent/notice
+  version and the time it was given, traced to LEG-2. **Date:** 2026-11-14
 
 ## Q8. Minimum user age (GDPR Art. 8)
 
@@ -105,7 +115,9 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
   children; no story defines an age rule.
 - **Options:** (a) age self-declaration (≥16) at registration; (b) documented assumption
   "adults only" in terms/privacy notice, no field stored (LEG-1 data minimisation).
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED.** For the MVP, registration is restricted to adults. The exact mechanism
+  (e.g. age confirmation at registration) is specified together with US-01, respecting LEG-1.
+  **Date:** 2026-11-14
 
 ## Q9. Module boundaries vs Fig. B.4 / Fig. B.12
 
@@ -116,7 +128,7 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
   `shared`.
 - **Proposal:** keep the CLAUDE.md split (it keeps plan versioning in one owner and recovery
   separate, as the BA requires) and treat Fig. B.4's controller as the logical entry point.
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED.** Keep the module split from CLAUDE.md. **Date:** 2026-11-14
 
 ## Q10. Day summary content (US-20)
 
@@ -126,14 +138,16 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 - **Options:** (a) follow US-20: active plan version only; (b) include a minimal "number of versions /
   last decision" field.
 - **Recommendation:** (a).
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED — (a).** The day summary follows the US-20 acceptance criteria (planned and
+  actual nutrition, remaining totals, activity, active plan version); no history browsing.
+  **Date:** 2026-11-14
 
 ## Q11. PostgreSQL version
 
 - Project uses PostgreSQL 17 (Compose, Testcontainers). BA reference [23] cites the PostgreSQL 18
   documentation; Table 2.4 does not pin a version.
 - **Options:** (a) keep 17, BA authors adjust the citation; (b) move the project to 18.
-- **Decision:** — **Date:** —
+- **Decision:** **AGREED — (a).** Keep PostgreSQL 17. **Date:** 2026-11-14
 
 ---
 
