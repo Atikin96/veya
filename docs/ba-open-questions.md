@@ -24,6 +24,8 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 | Q9 | Module boundaries vs Fig. B.4 / Fig. B.12 | Keep the CLAUDE.md module split | AGREED |
 | Q10 | Content of the day summary (US-20) vs history browsing (US-21, Should) | Follow US-20 criteria, no history browsing | AGREED |
 | Q11 | PostgreSQL 17 (project) vs reference [23] (PostgreSQL 18 docs) | Keep PostgreSQL 17 | AGREED |
+| Q12 | Meaning of EDIT in US-18 | Provisional: apply a selected subset of the proposal's changes | OPEN |
+| Q13 | How adulthood is confirmed at registration (Q8 mechanism) | Explicit "I am at least 18" confirmation stored as `adult_confirmed_at`; no birth date | AGREED |
 
 ---
 
@@ -149,6 +151,36 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 - **Options:** (a) keep 17, BA authors adjust the citation; (b) move the project to 18.
 - **Decision:** **AGREED — (a).** Keep PostgreSQL 17. **Date:** 2026-11-14
 
+## Q12. What does EDIT mean in US-18?
+
+- **Ambiguity:** US-18 and Fig. B.4 allow ACCEPT / EDIT / REJECT, and CLAUDE.md requires 400 for an
+  "invalid edit", but the BA does not define what the user may edit.
+- **Options:** (a) the user selects a non-empty subset of the proposal's changes (each change keeps its reason);
+  (b) the user may also change values of a proposed item (e.g. another meal or duration), which must then be
+  re-validated against hard constraints; (c) EDIT = the user builds a manual replacement (US-10/US-14 flow).
+- **Provisional implementation (database):** (a). `apply_recovery_decision(..., 'EDIT', baseVersion,
+  selectedChangeIds)` applies only the selected changes; an empty, duplicated or foreign selection -> `VY400`
+  (HTTP 400). Option (b) can be added later without schema changes to existing tables.
+- **BA check (2026-11-14) - (a) alone does NOT fully match the BA:**
+  - Fig. B.10 (recovery proposal layout, US-16-US-18) shows a separate **"Edit"** action on *each* proposed
+    change (e.g. "Smaller serving · 610 kcal", "Brisk walking · 25 min"), i.e. editing the proposed item itself.
+  - §1 ("the recovery interface must ... allow editing"), §1.4 ("VEYA must expose editable values") and
+    Table 2.8 ("400 invalid edit") point to user-modified values that the server must validate.
+  - US-18, UC-01 step 7 and Fig. B.2/B.4/B.5 only name EDIT; none of them limits it to choosing a subset.
+  - Nothing in the BA contradicts (b); subset selection can be expressed as part of (b) (unchanged item kept).
+- **Decision:** — **Date:** — (awaiting the team's choice; proposed: (b) = per-change edit of the proposed
+  item - other meal/exercise, portion kcal/macros, duration, time - re-validated against hard constraints by the
+  application, with invalid edits -> 400; the database stores the edited values as the new plan version.)
+
+## Q13. How is adulthood confirmed (mechanism for Q8)?
+
+- **Gap:** Q8 restricts MVP registration to adults; the mechanism was left for US-01.
+- **Options:** (a) explicit confirmation checkbox, stored as a timestamp; (b) birth date with an age check
+  (more data than needed, LEG-1); (c) no stored evidence, terms of use only.
+- **Decision:** **AGREED — (a).** Registration requires an explicit confirmation that the user is at least 18;
+  it is stored as `app_user.adult_confirmed_at timestamptz NOT NULL` (registration without it is rejected by the
+  database). No date of birth is stored (LEG-1). **Date:** 2026-11-14
+
 ---
 
 ## Known implementation gaps (not contradictions — planned work)
@@ -159,5 +191,5 @@ Status values: `OPEN` · `AGREED` · `BA UPDATED` (fixed in the BA, entry kept f
 | US-32 / NFR-17: one Compose startup launches **API** and PostgreSQL | Compose starts PostgreSQL only |
 | NFR-14: RFC 9457 Problem Details with stable `code` | Spring default error JSON |
 | NFR-18: request IDs in logs/responses | not present |
-| US-01 / US-30 / NFR-08: authentication, ownership checks | no Spring Security yet |
+| US-01 / US-30 / NFR-08: authentication, ownership checks | no Spring Security yet (the database already checks ownership inside its routines/triggers, see `docs/database/`) |
 | US-29 / NFR-15: OpenAPI contract and typed TS client | no OpenAPI yet; location of the shared spec to be agreed |

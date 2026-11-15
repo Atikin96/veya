@@ -1,7 +1,11 @@
 # VEYA local infrastructure.
 # Usage (from the repository root):
 #   docker compose -f infra/docker-compose.yml up -d
-# Optional overrides: copy infra/.env.example to infra/.env and adjust.
+# Passwords are never stored in the repository: create infra/.env (git-ignored) first with
+#   sh infra/generate-env.sh
+#
+# Role provisioning (infra/postgres/initdb) runs only when the data volume is created for the first
+# time. After changing roles or passwords, recreate the volume (see README, "Database").
 
 name: veya
 
@@ -12,13 +16,21 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${VEYA_DB_NAME:-veya}
-      POSTGRES_USER: ${VEYA_DB_USERNAME:-veya}
-      POSTGRES_PASSWORD: ${VEYA_DB_PASSWORD:-veya}
+      # Bootstrap superuser: used only by the init script and for maintenance, never by the API.
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${VEYA_POSTGRES_PASSWORD:?run sh infra/generate-env.sh first}
+      VEYA_OWNER_PASSWORD: ${VEYA_OWNER_PASSWORD:?run sh infra/generate-env.sh first}
+      VEYA_APP_PASSWORD: ${VEYA_APP_PASSWORD:?run sh infra/generate-env.sh first}
+      VEYA_READONLY_PASSWORD: ${VEYA_READONLY_PASSWORD:?run sh infra/generate-env.sh first}
+      VEYA_ADMIN_PASSWORD: ${VEYA_ADMIN_PASSWORD:?run sh infra/generate-env.sh first}
     ports:
       # Host port 5433 by default so it does not clash with a locally installed PostgreSQL on 5432.
       - "${VEYA_DB_PORT:-5433}:5432"
     volumes:
       - veya-postgres-data:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+      - ./postgres/seed:/veya/seed:ro
+      - ./postgres/scripts:/veya/scripts:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s

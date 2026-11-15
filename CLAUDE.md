@@ -85,19 +85,35 @@ Conventions:
   (`V<n>__<description>.sql`); never edit an applied migration. Hibernate runs with `ddl-auto: validate`.
 - Never log passwords, tokens or personal payloads (LEG-5, NFR-08).
 
+## Database conventions (details: `docs/database/README.md`)
+
+- All objects live in schema `veya`. Flyway migrates as `veya_owner`; the API connects as `veya_app_user`
+  (never a superuser). Roles are cluster objects created by `infra/postgres/initdb/01-create-roles.sh`.
+- Every new table and column gets a `COMMENT ON`; regenerate `docs/database/data-dictionary.md` with
+  `infra/postgres/scripts/data_dictionary.sql` (a test fails if the dictionary is missing a column).
+- Grant privileges for new objects explicitly in the same migration (least privilege: the app role has no DDL,
+  no UPDATE/DELETE on history tables).
+- Plan versions are created only through `create_plan_version(...)`; recovery decisions only through
+  `CALL apply_recovery_decision(...)`. Database error codes map to HTTP: `VY400`→400, `VY404`→404,
+  `VY409`/`VY001`→409.
+- Demo data (`infra/postgres/seed/demo_data.sql`) is never a migration.
+- No passwords or keys in the repository (not even local defaults): Compose and the API read `infra/.env`
+  (generated, git-ignored); tests use random per-run passwords.
+
 ## Repository layout
 
 ```
 backend/    Spring Boot 4.1 (Java 21, Maven Wrapper)
 frontend/   React + TypeScript client (not scaffolded yet)
 docs/       BA document, BA open questions/decisions, project documentation
-infra/      Docker Compose (PostgreSQL 17) and .env.example
+infra/      Docker Compose (PostgreSQL 17), .env.example, postgres/ (role init, demo seed, SQL scripts)
 .github/    GitHub Actions workflows
 ```
 
 ## Commands
 
 ```bash
+sh infra/generate-env.sh                           # once: random passwords in git-ignored infra/.env
 docker compose -f infra/docker-compose.yml up -d   # PostgreSQL 17 on localhost:5433
 cd backend
 ./mvnw verify                                      # build + all tests (requires Docker for Testcontainers)
@@ -107,7 +123,9 @@ cd backend
 ## Testing
 
 - Integration tests use Testcontainers PostgreSQL 17 via `TestcontainersConfiguration`
-  (`@Import(TestcontainersConfiguration.class)`); never H2.
+  (`@Import(TestcontainersConfiguration.class)`); never H2. The container (`VeyaTestDatabase`) runs the same
+  role init script as Compose, so tests use the real roles; database tests extend
+  `com.veya.db.DatabaseTestSupport`.
 - Recovery logic needs parameterized scenario tests with fixed data (KPI-1, KPI-3), plus 409/422/
   transaction-rollback tests (NFR-09, NFR-10). Target ≥70% coverage on selected logic (NFR-16).
 

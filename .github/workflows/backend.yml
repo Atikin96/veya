@@ -5,10 +5,14 @@ on:
     branches: [main]
     paths:
       - "backend/**"
+      - "infra/postgres/**"
+      - "docs/database/**"
       - ".github/workflows/backend.yml"
   pull_request:
     paths:
       - "backend/**"
+      - "infra/postgres/**"
+      - "docs/database/**"
       - ".github/workflows/backend.yml"
 
 permissions:
