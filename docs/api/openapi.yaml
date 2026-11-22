@@ -1,0 +1,2783 @@
+openapi: 3.1.0
+info:
+  title: VEYA REST API (MVP contract draft)
+  version: 0.1.0-draft
+  summary: Adaptive meal and physical-activity planning with Dynamic Plan Recovery.
+  description: |
+    **Draft contract for the VEYA MVP (27 Must user stories of the BA).**
+
+    Implementation status (2026-11-22): only the actuator health endpoints are implemented and verified by
+    automated tests. Every `/api/v1` operation is **PLANNED** - it documents the agreed or proposed contract
+    and cannot yet be called. The status of each operation is in its `x-veya-status` extension and in the
+    summary prefix `[IMPLEMENTED]` / `[PLANNED]`.
+
+    Sources: BA `docs/BA_Malafei_Mikita.docx` (Table 2.8, Appendix A, UC-01/UC-02, Fig. B.4/B.5, NFR, LEG),
+    agreed decisions `docs/ba-open-questions.md` (Q1-Q13), database schema `docs/database/`.
+    Paths and status codes taken from BA Table 2.8 are marked `x-veya-contract-source: BA`; everything else is
+    `PROPOSED` and needs agreement between backend and frontend.
+
+    Conventions (PROPOSED): JSON with camelCase fields; dates `YYYY-MM-DD` (the user's local plan date), times
+    `HH:mm`, instants ISO-8601 UTC; errors are RFC 9457 Problem Details (`application/problem+json`) with a stable
+    `code` (NFR-14); authentication with a JWT bearer token (BA §2.4, [25]).
+
+    Open questions that affect this contract (details in `docs/api/API_ENDPOINTS.md`, section "Open questions"):
+    **Q12** - meaning of EDIT (the EDIT decision is BLOCKED); **AQ-2** - 403 vs 404 for another user's resource;
+    AQ-3 - adding items to a saved plan (no endpoint); AQ-4 to AQ-12 - proposed conventions to agree.
+
+    Extensions used on operations: `x-veya-status`, `x-veya-module`, `x-veya-stories`, `x-veya-acceptance`,
+    `x-veya-contract-source`, `x-veya-authorization`, `x-veya-notes`, `x-veya-open-questions`, `x-veya-postman`
+    (test cases used to generate the Postman Collection).
+  contact:
+    name: VEYA team (backend - Mikita Malafei, frontend - Hanna Ivanova)
+servers:
+  - url: http://localhost:8080
+    description: Local development (docker compose + ./mvnw spring-boot:run)
+security:
+  - bearerAuth: []
+tags:
+  - name: system
+    description: Shared/system endpoints - health, API documentation, reference data (US-29, US-32, NFR-11).
+  - name: identity
+    description: Registration, sign-in, account, consent, export and deletion (US-01, US-04, US-30, LEG-2, LEG-4).
+  - name: profile
+    description: Profile, goal, permanent food exclusions and daily planning constraints (US-02, US-03).
+  - name: nutrition
+    description: Food catalogue search, diary, totals, saved/recent meals (US-05 to US-08, US-31).
+  - name: planning
+    description: Daily plans, plan items, meal plan suggestions, replacements, item status (US-09, US-10, US-12, US-14, US-15).
+  - name: activity
+    description: Exercise selection and actual workout records (US-12, US-13).
+  - name: recovery
+    description: Dynamic Plan Recovery - proposals, reasons, decisions, no-solution (US-16 to US-19).
+  - name: history
+    description: Day dashboard (US-20). History browsing (US-21) is post-MVP and not part of this contract.
+
+paths:
+  # ------------------------------------------------------------------------------------------------ system
+  /actuator/health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: '[IMPLEMENTED] Application health'
+      description: Aggregated health of the API including the database connection. Details are never exposed.
+      security: []
+      x-veya-status: IMPLEMENTED
+      x-veya-module: shared
+      x-veya-stories: [US-32]
+      x-veya-acceptance: 'US-32: given a clean machine with Docker, when Compose starts, PostgreSQL becomes healthy, migrations run and the API is ready. NFR-11 availability probe.'
+      x-veya-contract-source: Spring Boot Actuator (configured in application.yml)
+      x-veya-authorization: Public.
+      x-veya-notes: Verified by HealthEndpointTests (actuator/health, liveness, readiness return 200 UP; env/beans/configprops are not exposed).
+      x-veya-postman:
+        - name: Health is UP
+          expect: 200
+          auth: none
+      responses:
+        '200':
+          description: Application is up.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+              example: { groups: [liveness, readiness], status: UP }
+        '503':
+          description: Application or database is down.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+              example: { status: DOWN }
+  /actuator/health/liveness:
+    get:
+      tags: [system]
+      operationId: getLiveness
+      summary: '[IMPLEMENTED] Liveness probe'
+      security: []
+      x-veya-status: IMPLEMENTED
+      x-veya-module: shared
+      x-veya-stories: [US-32]
+      x-veya-acceptance: 'US-32 / NFR-17: health checks before readiness.'
+      x-veya-contract-source: Spring Boot Actuator
+      x-veya-authorization: Public.
+      x-veya-postman:
+        - name: Liveness is UP
+          expect: 200
+          auth: none
+      responses:
+        '200':
+          description: Process is alive.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+              example: { status: UP }
+  /actuator/health/readiness:
+    get:
+      tags: [system]
+      operationId: getReadiness
+      summary: '[IMPLEMENTED] Readiness probe'
+      security: []
+      x-veya-status: IMPLEMENTED
+      x-veya-module: shared
+      x-veya-stories: [US-32]
+      x-veya-acceptance: 'US-32 / NFR-17: the API is ready only after migrations.'
+      x-veya-contract-source: Spring Boot Actuator
+      x-veya-authorization: Public.
+      x-veya-postman:
+        - name: Readiness is UP
+          expect: 200
+          auth: none
+      responses:
+        '200':
+          description: Ready to serve traffic.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+              example: { status: UP }
+  /v3/api-docs:
+    get:
+      tags: [system]
+      operationId: getApiDocs
+      summary: '[PLANNED] OpenAPI document of the running API'
+      description: Machine-readable contract generated by the backend (springdoc or equivalent). Until implemented, this file (`docs/api/openapi.yaml`) is the contract.
+      security: []
+      x-veya-status: PLANNED
+      x-veya-module: shared
+      x-veya-stories: [US-29]
+      x-veya-acceptance: 'US-29: given a published build, when contract docs are generated, then every client-used method specifies path, auth, schemas, success and main error responses in OpenAPI.'
+      x-veya-contract-source: PROPOSED (springdoc default path)
+      x-veya-authorization: Public in development; may be disabled in production (PROPOSED).
+      x-veya-postman:
+        - name: OpenAPI document is served
+          expect: 200
+          auth: none
+      responses:
+        '200':
+          description: OpenAPI document.
+          content:
+            application/json:
+              schema: { type: object }
+              example: { openapi: 3.1.0, info: { title: VEYA REST API, version: 0.1.0 } }
+  /api/v1/reference-data:
+    get:
+      tags: [system]
+      operationId: getReferenceData
+      summary: '[PLANNED] Reference vocabularies for forms'
+      description: Goals, meal slots, equipment and ingredients used by profile, constraint, diary and plan forms.
+      x-veya-status: PLANNED
+      x-veya-module: shared
+      x-veya-stories: [US-02, US-03, US-06]
+      x-veya-acceptance: 'Supports US-02 (goal), US-03 (exclusions, equipment), US-06 (meal slot) forms with valid codes.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Any authenticated user; data is not personal.
+      x-veya-notes: Small and stable; the client may cache it for the session.
+      x-veya-postman:
+        - name: Reference data
+          expect: 200
+        - name: Reference data without token
+          expect: 401
+          auth: none
+      responses:
+        '200':
+          description: Reference vocabularies.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferenceData' }
+              example:
+                goals: [{ code: LOSE_WEIGHT, name: Lose weight }, { code: MAINTAIN_WEIGHT, name: Maintain weight }, { code: GAIN_WEIGHT, name: Gain weight / build muscle }]
+                mealSlots: [{ code: BREAKFAST, name: Breakfast, sortOrder: 1 }, { code: LUNCH, name: Lunch, sortOrder: 2 }, { code: DINNER, name: Dinner, sortOrder: 3 }, { code: SNACK, name: Snack, sortOrder: 4 }]
+                equipment: [{ code: DUMBBELLS, name: Dumbbells }, { code: YOGA_MAT, name: Yoga mat }]
+                ingredients: [{ code: PEANUT, name: Peanut }, { code: FISH, name: Fish }, { code: MILK, name: Milk / dairy }]
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ---------------------------------------------------------------------------------------------- identity
+  /api/v1/auth/register:
+    post:
+      tags: [identity]
+      operationId: register
+      summary: '[PLANNED] Register a new account'
+      description: |
+        Creates an account with a securely hashed password (bcrypt/Argon2id). Registration requires the explicit
+        "I am at least 18" confirmation (Q8, Q13) and acceptance of the consent documents listed by
+        `GET /api/v1/consent-documents` (LEG-2, Q7). Does not sign the user in.
+      security: []
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-01]
+      x-veya-acceptance: 'US-01: given valid registration data, when submitted, then the account is created with a securely hashed password.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Public.
+      x-veya-notes: 'Not idempotent: a repeated request with the same e-mail returns 409. Password 8-72 characters (bcrypt limit) - PROPOSED.'
+      x-veya-open-questions: [AQ-4 consents required at registration, AQ-6 duplicate e-mail disclosure]
+      x-veya-postman:
+        - name: Register (Anna)
+          expect: 201
+          auth: none
+          saveFrom: { userId: userId }
+        - name: Register without adult confirmation
+          expect: 400
+          auth: none
+          example: missingAdultConfirmation
+        - name: Register with an existing e-mail
+          expect: 409
+          auth: none
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+            examples:
+              valid:
+                summary: Valid registration
+                value: { email: anna.demo@example.org, password: '<your-password>', adultConfirmed: true, consentDocumentIds: [1, 2] }
+              missingAdultConfirmation:
+                summary: Adult confirmation missing (400)
+                value: { email: teen@example.org, password: '<your-password>', adultConfirmed: false, consentDocumentIds: [1, 2] }
+      responses:
+        '201':
+          description: Account created.
+          headers:
+            Location: { $ref: '#/components/headers/Location' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+              example: { userId: a0000000-0000-4000-8000-000000000001, email: anna.demo@example.org, adultConfirmedAt: '2026-11-22T09:00:00Z', createdAt: '2026-11-22T09:00:00Z', hasProfile: false }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '409':
+          description: E-mail already registered (PROPOSED - see AQ-6).
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/email-already-registered', title: E-mail already registered, status: 409, code: EMAIL_ALREADY_REGISTERED, detail: An account with this e-mail already exists., instance: /api/v1/auth/register }
+  /api/v1/auth/login:
+    post:
+      tags: [identity]
+      operationId: login
+      summary: '[PLANNED] Sign in and obtain a JWT'
+      security: []
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-01, US-30]
+      x-veya-acceptance: 'US-01: invalid credentials return 401 without disclosing the account state.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Public.
+      x-veya-notes: The same 401 response for an unknown e-mail and a wrong password. Token lifetime and refresh are open (AQ-5).
+      x-veya-open-questions: [AQ-5 token lifetime and refresh]
+      x-veya-postman:
+        - name: Sign in (Anna)
+          expect: 200
+          auth: none
+          saveFrom: { accessToken: accessToken }
+        - name: Sign in with a wrong password
+          expect: 401
+          auth: none
+          example: wrongPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+            examples:
+              valid:
+                summary: Valid credentials
+                value: { email: anna.demo@example.org, password: '<your-password>' }
+              wrongPassword:
+                summary: Wrong password (401)
+                value: { email: anna.demo@example.org, password: definitely-wrong }
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+              example: { accessToken: '<jwt>', tokenType: Bearer, expiresIn: 3600 }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401':
+          description: Invalid credentials. The response is identical whether the account exists or not.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/invalid-credentials', title: Invalid credentials, status: 401, code: INVALID_CREDENTIALS, detail: E-mail or password is incorrect., instance: /api/v1/auth/login }
+  /api/v1/me:
+    get:
+      tags: [identity]
+      operationId: getMe
+      summary: '[PLANNED] Current account'
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-01, US-30]
+      x-veya-acceptance: 'US-30: missing/invalid token returns 401 without disclosing personal data.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; returns only the caller's own account. Never returns the password hash.
+      x-veya-postman:
+        - name: Current account
+          expect: 200
+        - name: Current account without token
+          expect: 401
+          auth: none
+        - name: Current account with an invalid token
+          expect: 401
+          auth: invalid
+      responses:
+        '200':
+          description: Account of the authenticated user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+              example: { userId: a0000000-0000-4000-8000-000000000001, email: anna.demo@example.org, adultConfirmedAt: '2026-11-01T08:00:00Z', createdAt: '2026-11-01T08:00:00Z', hasProfile: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [identity]
+      operationId: deleteMyAccount
+      summary: '[PLANNED] Delete my account and personal records'
+      description: |
+        Erases the account and all personal records (profile, consents, constraints, diary, plans, proposals,
+        decisions) through ON DELETE CASCADE. Requires explicit confirmation `confirm=true`, which the client sends
+        only after the user confirmed in the UI. Afterwards every previously issued token is rejected with 401.
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-04]
+      x-veya-acceptance: 'US-04: given explicit confirmation, when deletion completes, then associated personal records are deleted under the retention policy and the previous session cannot access them.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; deletes only the caller's own account.
+      x-veya-notes: 'Idempotent from the client view: after deletion the token is invalid, so a repeat returns 401. LEG-4 backup expiry (90 days) is operational, not part of the API.'
+      x-veya-postman:
+        - name: Delete account without confirmation
+          expect: 400
+          query: { confirm: 'false' }
+        - name: Delete my account (run last)
+          expect: 204
+          destructive: true
+      parameters:
+        - name: confirm
+          in: query
+          required: true
+          description: Must be `true` - explicit confirmation given by the user.
+          schema: { type: boolean, const: true }
+          example: true
+      responses:
+        '204': { description: Account and personal records deleted. }
+        '400':
+          description: Confirmation missing.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/confirmation-required', title: Confirmation required, status: 400, code: CONFIRMATION_REQUIRED, detail: Account deletion requires confirm=true., instance: /api/v1/me }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/me/export:
+    get:
+      tags: [identity]
+      operationId: exportMyData
+      summary: '[PLANNED] Export my data as JSON (LEG-4)'
+      description: Minimal JSON export of the caller's own records (Q6), produced by the database function `export_user_data`. Contains no password hash.
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-04]
+      x-veya-acceptance: 'LEG-4: support access, correction, export and deletion (agreed decision Q6: minimal JSON export). This is not US-36 (CSV, Could).'
+      x-veya-contract-source: PROPOSED (decision Q6)
+      x-veya-authorization: Authenticated user; only own data.
+      x-veya-postman:
+        - name: Export my data
+          expect: 200
+      responses:
+        '200':
+          description: Export document.
+          headers:
+            Content-Disposition:
+              description: Suggests a file name to the browser.
+              schema: { type: string }
+              example: attachment; filename="veya-export.json"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DataExport' }
+              example:
+                exportedAt: '2026-11-22T10:00:00Z'
+                account: { id: a0000000-0000-4000-8000-000000000001, email: anna.demo@example.org, createdAt: '2026-11-01T08:00:00Z', adultConfirmedAt: '2026-11-01T08:00:00Z' }
+                profile: { goal_code: LOSE_WEIGHT, energy_target_kcal: 1900 }
+                foodExclusions: [PEANUT]
+                consents: [{ type: PRIVACY_NOTICE, version: '1.0', grantedAt: '2026-11-01T08:00:00Z', withdrawnAt: null }]
+                dailyConstraints: []
+                foodEntries: []
+                activityEntries: []
+                savedMeals: []
+                plans: []
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/consent-documents:
+    get:
+      tags: [identity]
+      operationId: listConsentDocuments
+      summary: '[PLANNED] Current privacy notice and consent texts'
+      description: Versioned documents the user accepts at registration (LEG-2, Q7). Public, needed before sign-up.
+      security: []
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-01]
+      x-veya-acceptance: 'LEG-2: display a clear privacy notice; obtain explicit, separately recorded and versioned consent.'
+      x-veya-contract-source: PROPOSED (decision Q7)
+      x-veya-authorization: Public.
+      x-veya-postman:
+        - name: Consent documents
+          expect: 200
+          auth: none
+      responses:
+        '200':
+          description: Current document versions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ConsentDocument' }
+              example:
+                - { consentDocumentId: 1, consentType: PRIVACY_NOTICE, version: '1.0', publishedOn: '2026-11-01', summary: 'VEYA privacy notice: purposes, legal bases (Art. 6(1)(b)), retention and user rights.' }
+                - { consentDocumentId: 2, consentType: HEALTH_DATA_CONSENT, version: '1.0', publishedOn: '2026-11-01', summary: Explicit consent to process nutrition and activity records that may be health data (Art. 9(2)(a)). }
+  /api/v1/me/consents:
+    get:
+      tags: [identity]
+      operationId: listMyConsents
+      summary: '[PLANNED] My consent records'
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-01]
+      x-veya-acceptance: 'LEG-2 / Q7: separate consent record with version and time.'
+      x-veya-contract-source: PROPOSED (decision Q7)
+      x-veya-authorization: Authenticated user; only own consents.
+      x-veya-postman:
+        - name: My consents
+          expect: 200
+          saveFrom: { consentId: '0.consentId' }
+      responses:
+        '200':
+          description: Consent records, active and withdrawn.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/UserConsent' }
+              example:
+                - { consentId: 6f1c2a9e-3b7d-4e8f-a1b2-c3d4e5f60718, consentDocumentId: 1, consentType: PRIVACY_NOTICE, version: '1.0', grantedAt: '2026-11-01T08:00:00Z', withdrawnAt: null }
+                - { consentId: 7a2d3b0f-4c8e-4f90-b2c3-d4e5f6071829, consentDocumentId: 2, consentType: HEALTH_DATA_CONSENT, version: '1.0', grantedAt: '2026-11-01T08:01:00Z', withdrawnAt: null }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [identity]
+      operationId: grantConsent
+      summary: '[PLANNED] Accept a consent document version'
+      description: Records acceptance of a (new) document version, e.g. after the privacy notice was updated.
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-01]
+      x-veya-acceptance: 'LEG-2: explicit, separately recorded and versioned consent.'
+      x-veya-contract-source: PROPOSED (decision Q7)
+      x-veya-authorization: Authenticated user; records consent only for the caller.
+      x-veya-postman:
+        - name: Accept a consent document that is already active
+          expect: 409
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GrantConsentRequest' }
+            example: { consentDocumentId: 2 }
+      responses:
+        '201':
+          description: Consent recorded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserConsent' }
+              example: { consentId: 8b3e4c1a-5d9f-4a01-c3d4-e5f60718293a, consentDocumentId: 2, consentType: HEALTH_DATA_CONSENT, version: '1.0', grantedAt: '2026-11-22T10:05:00Z', withdrawnAt: null }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: An active consent for this document version already exists.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/consent-already-active', title: Consent already active, status: 409, code: CONSENT_ALREADY_ACTIVE, detail: Consent to HEALTH_DATA_CONSENT 1.0 is already active., instance: /api/v1/me/consents }
+  /api/v1/me/consents/{consentId}/withdrawal:
+    post:
+      tags: [identity]
+      operationId: withdrawConsent
+      summary: '[PLANNED] Withdraw a consent'
+      description: Records the withdrawal time (allowed once). What the application does after the health-data consent is withdrawn is an open question (AQ-4).
+      x-veya-status: PLANNED
+      x-veya-module: identity
+      x-veya-stories: [US-01]
+      x-veya-acceptance: 'LEG-2 consent; GDPR withdrawal. Database allows exactly one withdrawal per record.'
+      x-veya-contract-source: PROPOSED (decision Q7)
+      x-veya-authorization: Authenticated user; only own consent records (another user's record -> 403).
+      x-veya-open-questions: [AQ-4 consequences of withdrawing health-data consent]
+      x-veya-postman:
+        - name: Withdraw a consent
+          expect: 200
+        - name: Withdraw the same consent again
+          expect: 409
+      parameters:
+        - { $ref: '#/components/parameters/ConsentId' }
+      responses:
+        '200':
+          description: Consent withdrawn.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserConsent' }
+              example: { consentId: 7a2d3b0f-4c8e-4f90-b2c3-d4e5f6071829, consentDocumentId: 2, consentType: HEALTH_DATA_CONSENT, version: '1.0', grantedAt: '2026-11-01T08:01:00Z', withdrawnAt: '2026-11-22T10:10:00Z' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Already withdrawn.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/consent-already-withdrawn', title: Consent already withdrawn, status: 409, code: CONSENT_ALREADY_WITHDRAWN, detail: This consent was withdrawn on 2026-11-22., instance: /api/v1/me/consents/7a2d3b0f-4c8e-4f90-b2c3-d4e5f6071829/withdrawal }
+
+  # ----------------------------------------------------------------------------------------------- profile
+  /api/v1/me/profile:
+    get:
+      tags: [profile]
+      operationId: getMyProfile
+      summary: '[PLANNED] My profile and goal'
+      x-veya-status: PLANNED
+      x-veya-module: profile
+      x-veya-stories: [US-02]
+      x-veya-acceptance: 'US-02: given authenticated, valid values, when saved, then the profile appears on subsequent requests.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own profile only.
+      x-veya-postman:
+        - name: My profile
+          expect: 200
+      responses:
+        '200':
+          description: Profile.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+              example: { goal: LOSE_WEIGHT, energyTargetKcal: 1900, proteinTargetG: 110.0, fatTargetG: 60.0, carbsTargetG: 220.0, foodExclusions: [PEANUT], updatedAt: '2026-11-01T08:05:00Z' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: The user has not created a profile yet.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/profile-not-found', title: Profile not found, status: 404, code: PROFILE_NOT_FOUND, detail: Create the profile with PUT /api/v1/me/profile., instance: /api/v1/me/profile }
+    put:
+      tags: [profile]
+      operationId: saveMyProfile
+      summary: '[PLANNED] Create or update my profile, goal and permanent exclusions'
+      description: |
+        Stores the goal, daily targets entered by the user (not calculated - no BMR/TDEE) and permanent food
+        exclusions (Q5). Invalid ranges return field errors and do not change stored data.
+      x-veya-status: PLANNED
+      x-veya-module: profile
+      x-veya-stories: [US-02, US-03]
+      x-veya-acceptance: 'US-02: invalid ranges return a field error and do not change stored data. US-03: exclusions are mandatory conditions for meal, activity and recovery planning.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own profile only.
+      x-veya-notes: Idempotent (PUT replaces the whole profile including the exclusion list).
+      x-veya-postman:
+        - name: Save my profile
+          expect: 200
+        - name: Save profile with an out-of-range energy target
+          expect: 400
+          example: invalidRange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileRequest' }
+            examples:
+              valid:
+                summary: Valid profile
+                value: { goal: LOSE_WEIGHT, energyTargetKcal: 1900, proteinTargetG: 110, fatTargetG: 60, carbsTargetG: 220, foodExclusions: [PEANUT] }
+              invalidRange:
+                summary: Energy target out of range (400)
+                value: { goal: LOSE_WEIGHT, energyTargetKcal: 100, proteinTargetG: 110, fatTargetG: 60, carbsTargetG: 220, foodExclusions: [] }
+      responses:
+        '200':
+          description: Profile saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+              example: { goal: LOSE_WEIGHT, energyTargetKcal: 1900, proteinTargetG: 110.0, fatTargetG: 60.0, carbsTargetG: 220.0, foodExclusions: [PEANUT], updatedAt: '2026-11-22T10:15:00Z' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/constraints/{date}:
+    get:
+      tags: [profile]
+      operationId: getDailyConstraints
+      summary: '[PLANNED] Planning constraints of a day'
+      description: Returns the day's constraints; a day without saved constraints returns empty lists and `availableTimeMin = null` (PROPOSED).
+      x-veya-status: PLANNED
+      x-veya-module: profile
+      x-veya-stories: [US-03]
+      x-veya-acceptance: 'US-03: given valid daily constraints, when saved, then they are stored and treated as mandatory conditions.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own constraints only.
+      x-veya-postman:
+        - name: Constraints of the day
+          expect: 200
+      parameters:
+        - { $ref: '#/components/parameters/DatePath' }
+      responses:
+        '200':
+          description: Constraints of the day.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DailyConstraints' }
+              example: { date: '2026-11-16', availableTimeMin: 40, availableEquipment: [], availableIngredients: [], excludedIngredients: [FISH] }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [profile]
+      operationId: saveDailyConstraints
+      summary: '[PLANNED] Save planning constraints of a day'
+      description: |
+        Saves available time, equipment, available ingredients and temporary exclusions (Q3, Q5). If the change
+        makes a remaining planned item infeasible, the backend records a `CONSTRAINT_INFEASIBLE` deviation and the
+        response reports `recoveryRequired = true` with the affected items (US-15 rule 3). The plan itself is not
+        changed.
+      x-veya-status: PLANNED
+      x-veya-module: profile
+      x-veya-stories: [US-03, US-15]
+      x-veya-acceptance: 'US-03 (stored, mandatory conditions); US-15: changed time/ingredients/equipment that make a future slot infeasible set recoveryRequired.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own constraints only.
+      x-veya-notes: Idempotent (PUT replaces the day's constraints).
+      x-veya-postman:
+        - name: Save constraints (fish unavailable, 40 min)
+          expect: 200
+        - name: Save constraints with negative time
+          expect: 400
+          example: invalidTime
+      parameters:
+        - { $ref: '#/components/parameters/DatePath' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DailyConstraintsRequest' }
+            examples:
+              valid:
+                summary: Fish unavailable, 40 minutes, no equipment
+                value: { availableTimeMin: 40, availableEquipment: [], availableIngredients: [], excludedIngredients: [FISH] }
+              invalidTime:
+                summary: Negative available time (400)
+                value: { availableTimeMin: -5, availableEquipment: [], availableIngredients: [], excludedIngredients: [] }
+      responses:
+        '200':
+          description: Constraints saved; impact on the active plan of that day.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DailyConstraintsResult' }
+              example:
+                constraints: { date: '2026-11-16', availableTimeMin: 40, availableEquipment: [], availableIngredients: [], excludedIngredients: [FISH] }
+                planImpact: { planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21, recoveryRequired: true, infeasibleItems: [{ itemKey: b0000000-0000-4000-8000-000000000203, reason: 'Planned dinner contains fish, which is excluded for 2026-11-16.' }] }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # --------------------------------------------------------------------------------------------- nutrition
+  /api/v1/foods:
+    get:
+      tags: [nutrition]
+      operationId: searchFoods
+      summary: '[PLANNED] Search the food catalogue'
+      description: |
+        Case-insensitive substring search over the local catalogue and the external food provider, normalized to
+        calories and macros per 100 g with the source (US-05). If the provider fails but local results exist, the
+        response is 200 with `providerStatus = UNAVAILABLE` (R1 fallback, PROPOSED). If the provider times out and
+        there are no local results, 504 with `manualEntryAllowed = true` (US-05, US-31).
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-05, US-31]
+      x-veya-acceptance: 'US-05: given a reachable provider, when the user searches, then normalized foods show calories, macros and source; timeout produces a documented error and manual-input option. US-31: stable error code and safe retry/manual route.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; catalogue data is not personal.
+      x-veya-notes: 'Sorted by relevance (exact prefix first, then name). `limit` 1-50, default 20; no pagination (bounded result).'
+      x-veya-open-questions: [AQ-7 provider fallback behaviour]
+      x-veya-postman:
+        - name: Search foods "chick"
+          expect: 200
+        - name: Search with a one-letter query
+          expect: 400
+          query: { q: c }
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search text, 2-100 characters.
+          schema: { type: string, minLength: 2, maxLength: 100 }
+          example: chick
+        - { $ref: '#/components/parameters/Limit50' }
+      responses:
+        '200':
+          description: Matching foods.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FoodSearchResult' }
+              example:
+                providerStatus: OK
+                items: [{ foodId: 4, name: 'Chicken breast, cooked', source: LOCAL, kcalPer100g: 165.0, proteinPer100g: 31.0, fatPer100g: 3.6, carbsPer100g: 0.0, attribution: null }]
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '502': { $ref: '#/components/responses/ProviderUnavailable' }
+        '504': { $ref: '#/components/responses/ProviderTimeout' }
+  /api/v1/meals:
+    get:
+      tags: [nutrition]
+      operationId: listMeals
+      summary: '[PLANNED] Candidate meals of the catalogue'
+      description: Meals with derived nutrition and ingredient codes, used to build a plan manually (US-09). Meals containing the user's permanent exclusions are not returned.
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-09]
+      x-veya-acceptance: 'US-09: the proposed menu excludes prohibited items.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user.
+      x-veya-notes: '`limit` 1-100 (NFR-02 bounded candidate set), default 50. Sorted by name.'
+      x-veya-postman:
+        - name: Lunch meals
+          expect: 200
+      parameters:
+        - name: mealSlot
+          in: query
+          required: false
+          description: Only meals suitable for this slot (meals without a preferred slot are always included).
+          schema: { $ref: '#/components/schemas/MealSlot' }
+          example: LUNCH
+        - name: q
+          in: query
+          required: false
+          schema: { type: string, minLength: 2, maxLength: 100 }
+        - { $ref: '#/components/parameters/Limit100' }
+      responses:
+        '200':
+          description: Candidate meals.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MealCandidate' }
+              example:
+                - { mealId: 4, name: Chicken rice bowl, mealSlot: LUNCH, prepTimeMin: 20, kcal: 629.9, proteinG: 54.7, fatG: 16.4, carbsG: 63.0, ingredientCodes: [BROCCOLI, CHICKEN, RICE] }
+                - { mealId: 6, name: Lentil soup, mealSlot: null, prepTimeMin: 35, kcal: 475.9, proteinG: 26.4, fatG: 11.4, carbsG: 69.9, ingredientCodes: [LENTIL, VEGETABLES] }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/food-entries:
+    get:
+      tags: [nutrition]
+      operationId: listFoodEntries
+      summary: '[PLANNED] Diary entries of a day'
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-06, US-07]
+      x-veya-acceptance: 'US-06: confirmed entries are persisted unchanged.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own entries only.
+      x-veya-notes: Sorted by meal slot order, then creation time. No pagination (one day).
+      x-veya-postman:
+        - name: Diary of 2026-11-16
+          expect: 200
+      parameters:
+        - { $ref: '#/components/parameters/DateQuery' }
+      responses:
+        '200':
+          description: Entries of the day.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FoodEntry' }
+              example:
+                - { entryId: 9d4e5f60-7182-4930-a4b5-c6d7e8f90a1b, date: '2026-11-16', mealSlot: LUNCH, inputSource: MANUAL, foodId: null, savedMealId: null, planItemKey: b0000000-0000-4000-8000-000000000202, foodName: Office pizza (3 slices), portionG: 330.0, kcal: 879.9, proteinG: 32.0, fatG: 38.0, carbsG: 110.0, createdAt: '2026-11-16T12:40:00Z', updatedAt: '2026-11-16T12:40:00Z' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [nutrition]
+      operationId: createFoodEntry
+      summary: '[PLANNED] Log a confirmed food entry'
+      description: |
+        Stores the values the user confirmed (catalogue item or manual entry). Optionally linked to a planned MEAL
+        of the active plan version of the same date (`planItemKey`). The response tells whether the day now needs
+        recovery (the deviation is evaluated when the planned meal is confirmed, see the item status endpoint).
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-06, US-15]
+      x-veya-acceptance: 'US-06: given valid confirmed food values, when added, then the entry is persisted unchanged; invalid values are rejected without affecting totals.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; `planItemKey` must belong to the caller's own plan (otherwise 403).
+      x-veya-notes: Not idempotent - each call creates an entry. Saved-meal reuse has its own endpoint.
+      x-veya-postman:
+        - name: Log lunch (+250 kcal against the plan)
+          expect: 201
+          saveFrom: { foodEntryId: entry.entryId }
+        - name: Log food with zero portion
+          expect: 400
+          example: invalidPortion
+        - name: Log food without token
+          expect: 401
+          auth: none
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FoodEntryRequest' }
+            examples:
+              manualLinked:
+                summary: Manual entry linked to the planned lunch
+                value: { date: '2026-11-16', mealSlot: LUNCH, inputSource: MANUAL, foodId: null, planItemKey: b0000000-0000-4000-8000-000000000202, foodName: Office pizza (3 slices), portionG: 330, kcal: 879.9, proteinG: 32, fatG: 38, carbsG: 110 }
+              invalidPortion:
+                summary: Zero portion (400)
+                value: { date: '2026-11-16', mealSlot: SNACK, inputSource: MANUAL, foodName: Apple, portionG: 0, kcal: 50, proteinG: 0, fatG: 0, carbsG: 12 }
+      responses:
+        '201':
+          description: Entry stored.
+          headers:
+            Location: { $ref: '#/components/headers/Location' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FoodEntryResult' }
+              example:
+                entry: { entryId: 9d4e5f60-7182-4930-a4b5-c6d7e8f90a1b, date: '2026-11-16', mealSlot: LUNCH, inputSource: MANUAL, foodId: null, savedMealId: null, planItemKey: b0000000-0000-4000-8000-000000000202, foodName: Office pizza (3 slices), portionG: 330.0, kcal: 879.9, proteinG: 32.0, fatG: 38.0, carbsG: 110.0, createdAt: '2026-11-16T12:40:00Z', updatedAt: '2026-11-16T12:40:00Z' }
+                recoveryRequired: false
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/ImmutableHistory' }
+  /api/v1/food-entries/{entryId}:
+    patch:
+      tags: [nutrition]
+      operationId: updateFoodEntry
+      summary: '[PLANNED] Correct a food entry'
+      description: Partial update of a confirmed entry (portion, values, name, meal slot). Correcting an entry of an already confirmed planned meal re-evaluates the 200 kcal deviation.
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-06, US-15]
+      x-veya-acceptance: 'US-06: given valid confirmed food values, when edited, then the entry is persisted unchanged; invalid values are rejected without affecting totals.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; another user's entry -> 403.
+      x-veya-notes: 'JSON merge-patch semantics: only sent fields change. Idempotent for the same body.'
+      x-veya-postman:
+        - name: Correct the lunch entry
+          expect: 200
+        - name: Correct another user's entry
+          expect: 403
+          auth: other
+      parameters:
+        - { $ref: '#/components/parameters/FoodEntryId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FoodEntryPatch' }
+            example: { portionG: 300, kcal: 799.9 }
+      responses:
+        '200':
+          description: Entry corrected.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FoodEntryResult' }
+              example:
+                entry: { entryId: 9d4e5f60-7182-4930-a4b5-c6d7e8f90a1b, date: '2026-11-16', mealSlot: LUNCH, inputSource: MANUAL, foodId: null, savedMealId: null, planItemKey: b0000000-0000-4000-8000-000000000202, foodName: Office pizza (3 slices), portionG: 300.0, kcal: 799.9, proteinG: 32.0, fatG: 38.0, carbsG: 110.0, createdAt: '2026-11-16T12:40:00Z', updatedAt: '2026-11-16T12:55:00Z' }
+                recoveryRequired: false
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [nutrition]
+      operationId: deleteFoodEntry
+      summary: '[PLANNED] Remove a wrong food entry'
+      description: Removes an entry the user logged by mistake (correction). PROPOSED interpretation of "log and correct" (AQ-10).
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-06]
+      x-veya-acceptance: 'US-06: log and correct food; invalid values are rejected without affecting totals.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; another user's entry -> 403.
+      x-veya-open-questions: [AQ-10 deletion as part of correction]
+      x-veya-postman:
+        - name: Delete a food entry
+          expect: 204
+      parameters:
+        - { $ref: '#/components/parameters/FoodEntryId' }
+      responses:
+        '204': { description: Entry removed. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/food-entries/recent:
+    get:
+      tags: [nutrition]
+      operationId: listRecentFoodEntries
+      summary: '[PLANNED] Recent foods for quick re-logging'
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-08]
+      x-veya-acceptance: 'US-08: given an existing saved/recent item, when selected, then a new entry is created within at most three user actions without altering its original template.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own entries only.
+      x-veya-notes: 'Newest first, distinct by food name. `limit` 1-20, default 10.'
+      x-veya-postman:
+        - name: Recent foods
+          expect: 200
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 20, default: 10 }
+      responses:
+        '200':
+          description: Recent entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FoodEntry' }
+              example:
+                - { entryId: 2b3c4d5e-6f70-4812-93a4-b5c6d7e8f901, date: '2026-11-15', mealSlot: BREAKFAST, inputSource: SAVED_MEAL, foodId: 12, savedMealId: e0000000-0000-4000-8000-000000000001, planItemKey: b0000000-0000-4000-8000-000000000101, foodName: Eggs, portionG: 120.0, kcal: 171.6, proteinG: 15.1, fatG: 11.4, carbsG: 0.8, createdAt: '2026-11-15T07:10:00Z', updatedAt: '2026-11-15T07:10:00Z' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/saved-meals:
+    get:
+      tags: [nutrition]
+      operationId: listSavedMeals
+      summary: '[PLANNED] My saved meal templates'
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-08]
+      x-veya-acceptance: 'US-08: reuse saved or recent meals.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own templates only.
+      x-veya-notes: Sorted by name. No pagination.
+      x-veya-postman:
+        - name: My saved meals
+          expect: 200
+          saveFrom: { savedMealId: '0.savedMealId' }
+      responses:
+        '200':
+          description: Templates.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SavedMeal' }
+              example:
+                - savedMealId: e0000000-0000-4000-8000-000000000001
+                  name: My usual breakfast
+                  createdAt: '2026-11-01T08:10:00Z'
+                  items:
+                    - { lineNo: 1, foodId: 12, foodName: Eggs, portionG: 120.0, kcal: 171.6, proteinG: 15.1, fatG: 11.4, carbsG: 0.8 }
+                    - { lineNo: 2, foodId: 13, foodName: Whole wheat bread, portionG: 60.0, kcal: 148.2, proteinG: 7.8, fatG: 2.0, carbsG: 24.6 }
+                  totals: { kcal: 319.8, proteinG: 22.9, fatG: 13.4, carbsG: 25.4 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [nutrition]
+      operationId: createSavedMeal
+      summary: '[PLANNED] Save a meal template'
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-08]
+      x-veya-acceptance: 'US-08: saved meals can be reused without altering the original template.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; the template belongs to the caller.
+      x-veya-postman:
+        - name: Save a breakfast template
+          expect: 201
+          saveFrom: { savedMealId: savedMealId }
+        - name: Save a template with a duplicate name
+          expect: 409
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SavedMealRequest' }
+            example:
+              name: My usual breakfast
+              items:
+                - { foodId: 12, foodName: Eggs, portionG: 120, kcal: 171.6, proteinG: 15.1, fatG: 11.4, carbsG: 0.8 }
+                - { foodId: 13, foodName: Whole wheat bread, portionG: 60, kcal: 148.2, proteinG: 7.8, fatG: 2.0, carbsG: 24.6 }
+      responses:
+        '201':
+          description: Template saved.
+          headers:
+            Location: { $ref: '#/components/headers/Location' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SavedMeal' }
+              example:
+                savedMealId: e0000000-0000-4000-8000-000000000001
+                name: My usual breakfast
+                createdAt: '2026-11-22T10:20:00Z'
+                items:
+                  - { lineNo: 1, foodId: 12, foodName: Eggs, portionG: 120.0, kcal: 171.6, proteinG: 15.1, fatG: 11.4, carbsG: 0.8 }
+                  - { lineNo: 2, foodId: 13, foodName: Whole wheat bread, portionG: 60.0, kcal: 148.2, proteinG: 7.8, fatG: 2.0, carbsG: 24.6 }
+                totals: { kcal: 319.8, proteinG: 22.9, fatG: 13.4, carbsG: 25.4 }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: A template with this name already exists for the user.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/saved-meal-name-taken', title: Name already used, status: 409, code: SAVED_MEAL_NAME_TAKEN, detail: You already have a saved meal called "My usual breakfast"., instance: /api/v1/saved-meals }
+  /api/v1/saved-meals/{savedMealId}/entries:
+    post:
+      tags: [nutrition]
+      operationId: logSavedMeal
+      summary: '[PLANNED] Log a saved meal into the diary'
+      description: Creates one diary entry per template line (input source SAVED_MEAL). The template is not changed. Together with choosing the template and confirming, this keeps re-logging within three user actions (US-08, NFR-07).
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-08]
+      x-veya-acceptance: 'US-08: a new entry is created within at most three user actions without altering its original template.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; another user's template -> 403.
+      x-veya-notes: Not idempotent - each call logs the meal again.
+      x-veya-postman:
+        - name: Log my usual breakfast
+          expect: 201
+      parameters:
+        - { $ref: '#/components/parameters/SavedMealId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LogSavedMealRequest' }
+            example: { date: '2026-11-17', mealSlot: BREAKFAST, planItemKey: null }
+      responses:
+        '201':
+          description: Entries created.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FoodEntry' }
+              example:
+                - { entryId: 3c4d5e6f-7081-4923-a4b5-c6d7e8f90a12, date: '2026-11-17', mealSlot: BREAKFAST, inputSource: SAVED_MEAL, foodId: 12, savedMealId: e0000000-0000-4000-8000-000000000001, planItemKey: null, foodName: Eggs, portionG: 120.0, kcal: 171.6, proteinG: 15.1, fatG: 11.4, carbsG: 0.8, createdAt: '2026-11-17T07:00:00Z', updatedAt: '2026-11-17T07:00:00Z' }
+                - { entryId: 4d5e6f70-8192-4a34-b5c6-d7e8f90a1b23, date: '2026-11-17', mealSlot: BREAKFAST, inputSource: SAVED_MEAL, foodId: 13, savedMealId: e0000000-0000-4000-8000-000000000001, planItemKey: null, foodName: Whole wheat bread, portionG: 60.0, kcal: 148.2, proteinG: 7.8, fatG: 2.0, carbsG: 24.6, createdAt: '2026-11-17T07:00:00Z', updatedAt: '2026-11-17T07:00:00Z' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/days/{date}/nutrition:
+    get:
+      tags: [nutrition]
+      operationId: getNutritionSummary
+      summary: '[PLANNED] Consumed, target and remaining nutrition of a day'
+      description: Totals of confirmed entries compared with the profile targets (view `v_daily_nutrition_summary`). Without a profile the targets and remaining values are null.
+      x-veya-status: PLANNED
+      x-veya-module: nutrition
+      x-veya-stories: [US-07]
+      x-veya-acceptance: 'US-07: given saved records and a daily goal, when the summary is opened, then calories and macros match persisted confirmed entries and remaining targets.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own data only.
+      x-veya-postman:
+        - name: Nutrition summary of 2026-11-16
+          expect: 200
+      parameters:
+        - { $ref: '#/components/parameters/DatePath' }
+      responses:
+        '200':
+          description: Nutrition summary.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NutritionSummary' }
+              example:
+                date: '2026-11-16'
+                consumed: { kcal: 1306.3, proteinG: 49.2, fatG: 47.4, carbsG: 182.0 }
+                target: { kcal: 1900, proteinG: 110.0, fatG: 60.0, carbsG: 220.0 }
+                remaining: { kcal: 593.7, proteinG: 60.8, fatG: 12.6, carbsG: 38.0 }
+                entryCount: 4
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ---------------------------------------------------------------------------------------------- planning
+  /api/v1/meal-plan-suggestions:
+    post:
+      tags: [planning]
+      operationId: suggestMealPlan
+      summary: '[PLANNED] Suggest a daily meal plan (nothing is saved)'
+      description: |
+        Returns a proposed menu that excludes prohibited items and fits the targets. Nothing is stored; the user
+        reviews it and saves the plan explicitly with `POST /api/v1/plans`.
+      x-veya-status: PLANNED
+      x-veya-module: planning
+      x-veya-stories: [US-09]
+      x-veya-acceptance: 'US-09: given available candidate meals and goal/constraints, when requested, then the proposed menu excludes prohibited items and meets configured acceptable target ranges.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; uses the caller's profile and constraints.
+      x-veya-notes: Safe (no side effects) although POST is used for the request body. Deterministic for the same data.
+      x-veya-postman:
+        - name: Suggest a meal plan for 2026-11-17
+          expect: 200
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MealPlanSuggestionRequest' }
+            example: { date: '2026-11-17', mealSlots: [BREAKFAST, LUNCH, DINNER] }
+      responses:
+        '200':
+          description: Suggested items and totals.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MealPlanSuggestion' }
+              example:
+                date: '2026-11-17'
+                items:
+                  - { itemType: MEAL, mealSlot: BREAKFAST, plannedTime: '08:00', mealId: 1, mealName: Oatmeal with banana, kcal: 426.4, proteinG: 17.2, fatG: 9.4, carbsG: 72.0 }
+                  - { itemType: MEAL, mealSlot: LUNCH, plannedTime: '13:00', mealId: 4, mealName: Chicken rice bowl, kcal: 629.9, proteinG: 54.7, fatG: 16.4, carbsG: 63.0 }
+                  - { itemType: MEAL, mealSlot: DINNER, plannedTime: '19:00', mealId: 9, mealName: Buckwheat with chicken, kcal: 447.0, proteinG: 46.6, fatG: 5.8, carbsG: 52.9 }
+                totals: { kcal: 1503.3, proteinG: 118.5, fatG: 31.6, carbsG: 187.9 }
+                target: { kcal: 1900, proteinG: 110.0, fatG: 60.0, carbsG: 220.0 }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: No combination of candidate meals satisfies the exclusions and targets.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/no-feasible-meal-plan', title: No feasible meal plan, status: 422, code: NO_FEASIBLE_MEAL_PLAN, detail: No candidate meals satisfy your exclusions for DINNER., instance: /api/v1/meal-plan-suggestions, blockingConstraints: [{ type: FOOD_EXCLUSION, message: All dinner candidates contain excluded ingredients., itemKey: null }] }
+  /api/v1/plans:
+    get:
+      tags: [planning]
+      operationId: getPlanByDate
+      summary: '[PLANNED] Active plan of a date'
+      x-veya-status: PLANNED
+      x-veya-module: planning
+      x-veya-stories: [US-09, US-12, US-20]
+      x-veya-acceptance: 'US-12: scheduled items appear in the active day.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; returns only the caller's plan.
+      x-veya-postman:
+        - name: Plan of 2026-11-16
+          expect: 200
+          saveFrom: { planId: planId, planVersion: activeVersion }
+      parameters:
+        - { $ref: '#/components/parameters/DateQuery' }
+      responses:
+        '200':
+          description: Active version of the plan.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+              examples:
+                planVersion1: { $ref: '#/components/examples/PlanVersion1' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: No plan for this date.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/plan-not-found', title: Plan not found, status: 404, code: PLAN_NOT_FOUND, detail: There is no plan for 2026-11-20., instance: '/api/v1/plans?date=2026-11-20' }
+    post:
+      tags: [planning]
+      operationId: createPlan
+      summary: '[PLANNED] Save the plan of a day (version 1)'
+      description: |
+        Explicitly saves the user's plan for a date: meals (from a suggestion or chosen manually) and scheduled
+        workouts with duration (US-12). Planned nutrition is taken from the catalogue at save time (snapshot).
+        Creates version 1 (`create_plan_version`, reason INITIAL_PLAN). Items that break hard constraints
+        (exclusions, available time, equipment) are rejected with 422.
+      x-veya-status: PLANNED
+      x-veya-module: planning
+      x-veya-stories: [US-09, US-12]
+      x-veya-acceptance: 'US-09: the proposed menu excludes prohibited items. US-12: given valid exercises and time, when the plan is saved, then scheduled items appear in the active day and summary/recovery calculations.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; the plan is created for the caller.
+      x-veya-notes: 'One plan per user and date: a second POST for the same date returns 409. Adding items to an existing plan is not defined by the BA (AQ-3).'
+      x-veya-open-questions: [AQ-3 adding items to an existing plan]
+      x-veya-postman:
+        - name: Save plan for 2026-11-17
+          expect: 201
+          saveFrom: { planId: planId, planVersion: activeVersion, breakfastItemKey: 'items.0.itemKey', lunchItemKey: 'items.1.itemKey', workoutItemKey: 'items.2.itemKey', dinnerItemKey: 'items.3.itemKey' }
+        - name: Save a second plan for the same date
+          expect: 409
+        - name: Save a plan with a workout of 0 minutes
+          expect: 400
+          example: invalidDuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePlanRequest' }
+            examples:
+              valid:
+                summary: Three meals and a workout
+                value:
+                  date: '2026-11-17'
+                  items:
+                    - { itemType: MEAL, mealSlot: BREAKFAST, plannedTime: '08:00', mealId: 1 }
+                    - { itemType: MEAL, mealSlot: LUNCH, plannedTime: '13:00', mealId: 4 }
+                    - { itemType: MEAL, mealSlot: DINNER, plannedTime: '19:30', mealId: 7 }
+                    - { itemType: WORKOUT, plannedTime: '18:00', exerciseId: 1, durationMin: 30 }
+              invalidDuration:
+                summary: Workout of 0 minutes (400)
+                value:
+                  date: '2026-11-18'
+                  items:
+                    - { itemType: WORKOUT, plannedTime: '18:00', exerciseId: 1, durationMin: 0 }
+      responses:
+        '201':
+          description: Plan saved as version 1.
+          headers:
+            Location: { $ref: '#/components/headers/Location' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+              examples:
+                planVersion1: { $ref: '#/components/examples/PlanVersion1' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: A plan for this date already exists.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/plan-already-exists', title: Plan already exists, status: 409, code: PLAN_ALREADY_EXISTS, detail: A plan for 2026-11-17 already exists., instance: /api/v1/plans }
+        '422': { $ref: '#/components/responses/HardConstraintViolation' }
+  /api/v1/plans/{planId}:
+    get:
+      tags: [planning]
+      operationId: getPlan
+      summary: '[PLANNED] Active version of a plan'
+      x-veya-status: PLANNED
+      x-veya-module: planning
+      x-veya-stories: [US-09, US-12, US-18, US-20]
+      x-veya-acceptance: 'US-18: the response exposes the active version used as baseVersion.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; another user's plan -> 403.
+      x-veya-notes: Earlier versions are not browsable in the MVP (US-21 is Should).
+      x-veya-postman:
+        - name: Get plan
+          expect: 200
+        - name: Get another user's plan
+          expect: 403
+          auth: other
+        - name: Get a plan that does not exist
+          expect: 404
+          path: { planId: 00000000-0000-4000-8000-000000000000 }
+      parameters:
+        - { $ref: '#/components/parameters/PlanId' }
+      responses:
+        '200':
+          description: Active version.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+              examples:
+                planVersion1: { $ref: '#/components/examples/PlanVersion1' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/meal-options:
+    post:
+      tags: [planning]
+      operationId: getMealOptions
+      summary: '[PLANNED] Feasible alternatives for a planned meal (nothing is saved)'
+      description: |
+        Returns only hard-constraint-compliant candidates (exclusions, ingredients, time) for a PLANNED meal of the
+        active version, each with reasons. Nothing changes until the user confirms a replacement.
+      x-veya-status: PLANNED
+      x-veya-module: planning
+      x-veya-stories: [US-10]
+      x-veya-acceptance: 'US-10: given an active planned meal, when replacement is requested, then only hard-constraint-compliant candidates and reasons are displayed.'
+      x-veya-contract-source: BA Table 2.8 (POST /api/v1/meal-options, 200 candidates/reasons, 422 if no feasible alternative); request body PROPOSED
+      x-veya-authorization: Authenticated user; the plan must be the caller's (otherwise 403).
+      x-veya-notes: Safe (no side effects). At most 100 candidates are considered (NFR-02).
+      x-veya-postman:
+        - name: Meal options for the dinner
+          expect: 200
+        - name: Meal options when nothing is feasible
+          expect: 422
+          example: infeasible
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplacementOptionsRequest' }
+            examples:
+              valid:
+                summary: Alternatives for the planned dinner
+                value: { planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21, itemKey: b0000000-0000-4000-8000-000000000203 }
+              infeasible:
+                summary: Every candidate breaks a constraint (422)
+                value: { planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21, itemKey: b0000000-0000-4000-8000-000000000203 }
+      responses:
+        '200':
+          description: Feasible alternatives with reasons.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MealOptions' }
+              example:
+                planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+                itemKey: b0000000-0000-4000-8000-000000000203
+                baseVersion: 1
+                options:
+                  - { mealId: 8, name: Tofu vegetable stir-fry, kcal: 565.4, proteinG: 25.4, fatG: 20.6, carbsG: 72.3, prepTimeMin: 20, reasons: [{ category: INGREDIENT, text: 'Contains no fish, which is excluded today.' }, { category: TIME, text: Takes 20 minutes; 40 minutes are available. }] }
+                  - { mealId: 6, name: Lentil soup, kcal: 475.9, proteinG: 26.4, fatG: 11.4, carbsG: 69.9, prepTimeMin: 35, reasons: [{ category: NUTRITION, text: 85 kcal lighter than the planned dinner. }] }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/ItemAlreadyRecorded' }
+        '422': { $ref: '#/components/responses/NoFeasibleAlternative' }
+  /api/v1/exercise-options:
+    post:
+      tags: [planning]
+      operationId: getExerciseOptions
+      summary: '[PLANNED] Feasible alternatives for a planned workout (nothing is saved)'
+      description: Compliant exercises for the available time and equipment, with reasons, or a reason why none exists (422).
+      x-veya-status: PLANNED
+      x-veya-module: activity
+      x-veya-stories: [US-14]
+      x-veya-acceptance: 'US-14: given changed time/equipment, when requested, then compliant alternatives or a reason for none are shown.'
+      x-veya-contract-source: PROPOSED (mirrors BA meal-options)
+      x-veya-authorization: Authenticated user; the plan must be the caller's.
+      x-veya-notes: Safe (no side effects). At most 100 candidates (NFR-02).
+      x-veya-postman:
+        - name: Exercise options for the workout
+          expect: 200
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplacementOptionsRequest' }
+            example: { planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21, itemKey: b0000000-0000-4000-8000-000000000204 }
+      responses:
+        '200':
+          description: Feasible alternatives with reasons.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExerciseOptions' }
+              example:
+                planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+                itemKey: b0000000-0000-4000-8000-000000000204
+                baseVersion: 1
+                options:
+                  - { exerciseId: 2, name: Brisk walking, durationMin: 25, reasons: [{ category: EQUIPMENT, text: Needs no equipment. }, { category: TIME, text: Fits the 30 available minutes. }] }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/ItemAlreadyRecorded' }
+        '422': { $ref: '#/components/responses/NoFeasibleAlternative' }
+  /api/v1/plans/{planId}/items/{itemKey}/replacement:
+    post:
+      tags: [planning]
+      operationId: replacePlanItem
+      summary: '[PLANNED] Confirm a meal or exercise replacement (creates the next version)'
+      description: |
+        Confirms the option the user chose. The server checks ownership, that `baseVersion` equals the active
+        version and that the item is still PLANNED, then creates the next immutable version
+        (MEAL_REPLACEMENT / EXERCISE_REPLACEMENT) in one transaction. History keeps the earlier version (UC-02).
+      x-veya-status: PLANNED
+      x-veya-module: planning
+      x-veya-stories: [US-10, US-14]
+      x-veya-acceptance: 'US-10: confirmation creates the next plan version and updates totals. US-14: confirmed choice updates the plan and history.'
+      x-veya-contract-source: PROPOSED (BA requires confirmation and a new version; path not given)
+      x-veya-authorization: Authenticated user; another user's plan -> 403.
+      x-veya-notes: 'Optimistic locking by `baseVersion`: a stale version returns 409 and nothing changes (NFR-10). Not idempotent - repeat with the old baseVersion returns 409.'
+      x-veya-postman:
+        - name: Replace the dinner with tofu stir-fry
+          expect: 200
+          bodyVars: { baseVersion: planVersion }
+          saveFrom: { planVersion: activeVersion }
+        - name: Replace with a stale baseVersion
+          expect: 409
+          example: stale
+      parameters:
+        - { $ref: '#/components/parameters/PlanId' }
+        - { $ref: '#/components/parameters/ItemKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplacementRequest' }
+            examples:
+              meal:
+                summary: Replace a meal
+                value: { baseVersion: 1, mealId: 8 }
+              stale:
+                summary: Outdated baseVersion (409)
+                value: { baseVersion: 1, mealId: 6 }
+      responses:
+        '200':
+          description: New active version.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+              examples:
+                planVersion2: { $ref: '#/components/examples/PlanVersion2' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/StaleVersion' }
+        '422': { $ref: '#/components/responses/HardConstraintViolation' }
+  /api/v1/plans/{planId}/items/{itemKey}/status:
+    post:
+      tags: [planning]
+      operationId: recordPlanItemStatus
+      summary: '[PLANNED] Confirm, skip or mark a planned item as missed'
+      description: |
+        Records what happened to a planned item of the active version: a MEAL can be COMPLETED (confirmed - the
+        linked diary entries are compared with the plan, 200 kcal rule), SKIPPED or MISSED; a WORKOUT can be
+        MISSED here (completed/skipped/changed workouts are recorded with `POST /api/v1/activity-entries`).
+        SKIPPED/MISSED or a deviation >= 200 kcal sets `recoveryRequired`. A status can be recorded only once.
+      x-veya-status: PLANNED
+      x-veya-module: planning
+      x-veya-stories: [US-13, US-15]
+      x-veya-acceptance: 'US-15: a confirmed meal differing by >= 200 kcal or a planned meal/workout marked missed/skipped sets recoveryRequired; smaller differences do not.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; another user's plan -> 403.
+      x-veya-notes: Not idempotent - a second status for the same item returns 409 STATUS_ALREADY_RECORDED.
+      x-veya-postman:
+        - name: Confirm lunch (deviation >= 200 kcal)
+          expect: 200
+          path: { itemKey: b0000000-0000-4000-8000-000000000202 }
+        - name: Confirm lunch a second time
+          expect: 409
+          path: { itemKey: b0000000-0000-4000-8000-000000000202 }
+      parameters:
+        - { $ref: '#/components/parameters/PlanId' }
+        - { $ref: '#/components/parameters/ItemKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemStatusRequest' }
+            example: { status: COMPLETED }
+      responses:
+        '200':
+          description: Status recorded; deviation result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemStatusResult' }
+              example:
+                planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+                item: { itemKey: b0000000-0000-4000-8000-000000000202, itemType: MEAL, mealSlot: LUNCH, plannedTime: '13:00', meal: { mealId: 4, name: Chicken rice bowl }, exercise: null, plannedKcal: 629.9, plannedProteinG: 54.7, plannedFatG: 16.4, plannedCarbsG: 63.0, durationMin: null, status: COMPLETED }
+                recoveryRequired: true
+                newDeviations: [{ deviationId: 1a2b3c4d-5e6f-4708-9a1b-2c3d4e5f6a7b, type: KCAL_DIFFERENCE, itemKey: b0000000-0000-4000-8000-000000000202, kcalDifference: 250.0, details: null, detectedAt: '2026-11-16T12:45:00Z' }]
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Status already recorded, or the item belongs to a superseded version.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://veya.example/problems/status-already-recorded', title: Status already recorded, status: 409, code: STATUS_ALREADY_RECORDED, detail: The status of this item is already COMPLETED., instance: /api/v1/plans/5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21/items/b0000000-0000-4000-8000-000000000202/status }
+  /api/v1/plans/{planId}/deviations:
+    get:
+      tags: [planning]
+      operationId: listOpenDeviations
+      summary: '[PLANNED] Open deviations of a plan (why recovery is needed)'
+      description: Shows why `recoveryRequired` is set ("Reason for review" in Fig. B.10). Resolved deviations are not listed.
+      x-veya-status: PLANNED
+      x-veya-module: recovery
+      x-veya-stories: [US-15]
+      x-veya-acceptance: 'US-15: I know when recovery is needed.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; another user's plan -> 403.
+      x-veya-postman:
+        - name: Open deviations
+          expect: 200
+      parameters:
+        - { $ref: '#/components/parameters/PlanId' }
+      responses:
+        '200':
+          description: Open deviations, oldest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Deviation' }
+              example:
+                - { deviationId: 1a2b3c4d-5e6f-4708-9a1b-2c3d4e5f6a7b, type: KCAL_DIFFERENCE, itemKey: b0000000-0000-4000-8000-000000000202, kcalDifference: 250.0, details: null, detectedAt: '2026-11-16T12:45:00Z' }
+                - { deviationId: 2b3c4d5e-6f70-4819-a2b3-c4d5e6f70819, type: ITEM_SKIPPED, itemKey: b0000000-0000-4000-8000-000000000204, kcalDifference: null, details: null, detectedAt: '2026-11-16T17:30:00Z' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------------------------------------- activity
+  /api/v1/exercises:
+    get:
+      tags: [activity]
+      operationId: listExercises
+      summary: '[PLANNED] Exercises for scheduling a workout'
+      description: Basic exercise selection with required equipment. Filtering by muscle/difficulty/equipment (US-11) is Should and not part of the MVP.
+      x-veya-status: PLANNED
+      x-veya-module: activity
+      x-veya-stories: [US-12]
+      x-veya-acceptance: 'US-12: given valid exercises and time, the plan can be saved.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user.
+      x-veya-notes: '`limit` 1-100, default 50; sorted by name.'
+      x-veya-postman:
+        - name: Exercises
+          expect: 200
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Name contains (case-insensitive), 2-100 characters.
+          schema: { type: string, minLength: 2, maxLength: 100 }
+        - { $ref: '#/components/parameters/Limit100' }
+      responses:
+        '200':
+          description: Exercises.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Exercise' }
+              example:
+                - { exerciseId: 3, name: Bodyweight circuit, metValue: 8.0, requiredEquipment: [] }
+                - { exerciseId: 5, name: Dumbbell strength training, metValue: 5.0, requiredEquipment: [DUMBBELLS] }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/activity-entries:
+    get:
+      tags: [activity]
+      operationId: listActivityEntries
+      summary: '[PLANNED] Workout records of a day'
+      x-veya-status: PLANNED
+      x-veya-module: activity
+      x-veya-stories: [US-13, US-20]
+      x-veya-acceptance: 'US-13: the actual event persists.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; own records only.
+      x-veya-postman:
+        - name: Workouts of 2026-11-16
+          expect: 200
+      parameters:
+        - { $ref: '#/components/parameters/DateQuery' }
+      responses:
+        '200':
+          description: Records of the day.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ActivityEntry' }
+              example:
+                - { entryId: 5e6f7081-92a3-4b45-c6d7-e8f90a1b2c34, date: '2026-11-16', exerciseId: 1, exerciseName: 'Running, 10 km/h', planItemKey: b0000000-0000-4000-8000-000000000204, status: SKIPPED, durationMin: null, createdAt: '2026-11-16T17:30:00Z' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [activity]
+      operationId: createActivityEntry
+      summary: '[PLANNED] Record a workout as completed, skipped or changed'
+      description: |
+        Stores the actual workout event. If it refers to a planned WORKOUT (`planItemKey`), the planned item's status
+        is set to the same value; SKIPPED sets `recoveryRequired` (US-15). One record per planned workout.
+      x-veya-status: PLANNED
+      x-veya-module: activity
+      x-veya-stories: [US-13, US-15]
+      x-veya-acceptance: 'US-13: given a planned activity, when its status is recorded, then the actual event persists and deviation detection evaluates the changed plan state.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; `planItemKey` must be the caller's (otherwise 403).
+      x-veya-notes: Not idempotent; a second record for the same planned workout returns 409.
+      x-veya-postman:
+        - name: Skip the planned workout
+          expect: 201
+        - name: Completed workout without duration
+          expect: 400
+          example: missingDuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ActivityEntryRequest' }
+            examples:
+              skipped:
+                summary: Planned run skipped
+                value: { date: '2026-11-16', exerciseId: 1, planItemKey: b0000000-0000-4000-8000-000000000204, status: SKIPPED, durationMin: null }
+              missingDuration:
+                summary: COMPLETED without duration (400)
+                value: { date: '2026-11-16', exerciseId: 2, planItemKey: null, status: COMPLETED, durationMin: null }
+      responses:
+        '201':
+          description: Record stored.
+          headers:
+            Location: { $ref: '#/components/headers/Location' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivityEntryResult' }
+              example:
+                entry: { entryId: 5e6f7081-92a3-4b45-c6d7-e8f90a1b2c34, date: '2026-11-16', exerciseId: 1, exerciseName: 'Running, 10 km/h', planItemKey: b0000000-0000-4000-8000-000000000204, status: SKIPPED, durationMin: null, createdAt: '2026-11-16T17:30:00Z' }
+                recoveryRequired: true
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/StatusAlreadyRecorded' }
+
+  # ---------------------------------------------------------------------------------------------- recovery
+  /api/v1/plans/{planId}/recovery-proposals:
+    post:
+      tags: [recovery]
+      operationId: createRecoveryProposal
+      summary: '[PLANNED] Generate a recovery proposal for the remaining day'
+      description: |
+        UC-01 steps 4-5. The engine loads the active version, freezes completed items, derives remaining targets
+        from confirmed facts, filters candidates by hard constraints and ranks feasible combinations. The proposal
+        is stored with `baseVersion` and a human-readable reason per changed item. **The active plan does not
+        change** - it changes only after an explicit decision. No feasible combination -> 422 with
+        `blockingConstraints` and no new version (US-19).
+      x-veya-status: PLANNED
+      x-veya-module: recovery
+      x-veya-stories: [US-16, US-17, US-19]
+      x-veya-acceptance: 'US-16: given a recoveryRequired plan, when requested, then completed items are frozen and feasible future combinations are returned with totals or an explicit no-solution response. US-17: each changed item has a human-readable reason. US-19: no feasible combination -> blockingConstraints and 422, no new plan version.'
+      x-veya-contract-source: BA Table 2.8 (201 proposalId, baseVersion, changed items, totals and reasons; 422 if impossible) + Q1 (201 Created)
+      x-veya-authorization: Authenticated user; another user's plan -> 403.
+      x-veya-notes: 'Not idempotent - each call stores a new proposal. Response time target p95 <= 2 s (NFR-02), visible <= 3 s (KPI-4). The request body is optional.'
+      x-veya-postman:
+        - name: Generate a recovery proposal
+          expect: 201
+          bodyVars: { baseVersion: planVersion }
+          saveFrom: { proposalId: proposalId, proposalBaseVersion: baseVersion, firstChangeId: 'changes.0.changeId' }
+        - name: Generate a second proposal (for the stale case)
+          expect: 201
+          bodyVars: { baseVersion: planVersion }
+          saveFrom: { staleProposalId: proposalId }
+        - name: Recovery when nothing is feasible
+          expect: 422
+        - name: Recovery when it is not required
+          expect: 409
+        - name: Recovery for another user's plan
+          expect: 403
+          auth: other
+      parameters:
+        - { $ref: '#/components/parameters/PlanId' }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRecoveryProposalRequest' }
+            example: { baseVersion: 1 }
+      responses:
+        '201':
+          description: Proposal stored; the plan is unchanged.
+          headers:
+            Location: { $ref: '#/components/headers/Location' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RecoveryProposal' }
+              examples:
+                recoveryProposalPending: { $ref: '#/components/examples/RecoveryProposalPending' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Recovery is not required for this plan, or the client's baseVersion is stale.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              examples:
+                notRequired:
+                  value: { type: 'https://veya.example/problems/recovery-not-required', title: Recovery not required, status: 409, code: RECOVERY_NOT_REQUIRED, detail: No significant deviation is open for this plan., instance: /api/v1/plans/5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21/recovery-proposals }
+                stale:
+                  value: { type: 'https://veya.example/problems/stale-plan-version', title: Plan version is outdated, status: 409, code: STALE_PLAN_VERSION, detail: 'Stale baseVersion 1: active plan version is 2.', instance: /api/v1/plans/5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21/recovery-proposals, currentVersion: 2 }
+        '422':
+          description: No feasible combination (US-19). No proposal and no new plan version are created.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example:
+                type: 'https://veya.example/problems/recovery-not-feasible'
+                title: No feasible recovery
+                status: 422
+                code: RECOVERY_NOT_FEASIBLE
+                detail: No combination of remaining meals and workouts satisfies your constraints.
+                instance: /api/v1/plans/5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21/recovery-proposals
+                blockingConstraints:
+                  - { type: TIME, message: Only 10 minutes are available; every remaining item needs at least 20., itemKey: null }
+                  - { type: FOOD_EXCLUSION, message: All dinner candidates contain fish or peanut., itemKey: b0000000-0000-4000-8000-000000000203 }
+  /api/v1/recovery-proposals/{proposalId}:
+    get:
+      tags: [recovery]
+      operationId: getRecoveryProposal
+      summary: '[PLANNED] A recovery proposal with its current status'
+      description: 'Status is derived: PENDING, STALE (the plan moved to a newer version), ACCEPTED, EDITED or REJECTED.'
+      x-veya-status: PLANNED
+      x-veya-module: recovery
+      x-veya-stories: [US-16, US-17, US-18]
+      x-veya-acceptance: 'US-17: given a proposal, when displayed, then each changed item has a human-readable reason.'
+      x-veya-contract-source: PROPOSED
+      x-veya-authorization: Authenticated user; another user's proposal -> 403.
+      x-veya-postman:
+        - name: Get the proposal
+          expect: 200
+        - name: Get another user's proposal
+          expect: 403
+          auth: other
+      parameters:
+        - { $ref: '#/components/parameters/ProposalId' }
+      responses:
+        '200':
+          description: Proposal.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RecoveryProposal' }
+              examples:
+                recoveryProposalPending: { $ref: '#/components/examples/RecoveryProposalPending' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/v1/recovery-proposals/{proposalId}/decision:
+    post:
+      tags: [recovery]
+      operationId: decideRecoveryProposal
+      summary: '[PLANNED] ACCEPT or REJECT a proposal (EDIT is BLOCKED by Q12)'
+      description: |
+        Explicit user decision (US-18). The server checks ownership and that `baseVersion` equals both the proposal's
+        base version and the active plan version, then:
+
+        * **ACCEPT** - saves the decision **and** the new plan version in one transaction (NFR-09); open deviations are
+          resolved and `recoveryRequired` becomes false;
+        * **REJECT** - records the decision; the active plan stays unchanged and `recoveryRequired` stays true;
+        * **EDIT** - **BLOCKED (Q12 OPEN)**. The database can currently apply a selected subset of the proposal's changes
+          (`selectedChangeIds`), but the BA mockup (Fig. B.10) also shows editing the values of individual proposed
+          items. The EDIT request schema is therefore not final and must not be implemented by the client yet.
+
+        Stale `baseVersion` -> 409 and nothing changes (NFR-10). Invalid decision or edit -> 400.
+      x-veya-status: PLANNED
+      x-veya-module: recovery
+      x-veya-stories: [US-18]
+      x-veya-acceptance: 'US-18: given a proposal with baseVersion, when a decision is confirmed, then the server checks ownership and version and transactionally applies ACCEPT/EDIT; REJECT leaves active plan unchanged; stale version returns 409.'
+      x-veya-contract-source: BA Table 2.8 (200 active plan/version; 409 stale version; 400 invalid edit)
+      x-veya-authorization: Authenticated user; another user's proposal -> 403.
+      x-veya-notes: 'A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins.'
+      x-veya-open-questions: [Q12 meaning of EDIT (BLOCKED)]
+      x-veya-postman:
+        - name: ACCEPT the proposal
+          expect: 200
+          example: accept
+          bodyVars: { baseVersion: proposalBaseVersion }
+          saveFrom: { planVersion: plan.activeVersion }
+        - name: ACCEPT a stale proposal
+          expect: 409
+          example: staleAccept
+          path: { proposalId: '{{staleProposalId}}' }
+        - name: Decide the same proposal again
+          expect: 409
+          example: accept
+        - name: REJECT a proposal
+          expect: 200
+          example: reject
+          bodyVars: { baseVersion: proposalBaseVersion }
+          path: { proposalId: '{{rejectProposalId}}' }
+        - name: Invalid decision value
+          expect: 400
+          example: invalidDecision
+        - name: EDIT a proposal (BLOCKED - Q12 open)
+          expect: 200
+          example: editProvisional
+          bodyVars: { baseVersion: proposalBaseVersion }
+          blocked: true
+      parameters:
+        - { $ref: '#/components/parameters/ProposalId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisionRequest' }
+            examples:
+              accept:
+                summary: Accept the whole proposal
+                value: { decision: ACCEPT, baseVersion: 1 }
+              reject:
+                summary: Reject - plan stays unchanged
+                value: { decision: REJECT, baseVersion: 1 }
+              staleAccept:
+                summary: Accept with an outdated base version (409)
+                value: { decision: ACCEPT, baseVersion: 1 }
+              invalidDecision:
+                summary: Unknown decision (400)
+                value: { decision: MAYBE, baseVersion: 1 }
+              editProvisional:
+                summary: 'EDIT - provisional shape, BLOCKED by Q12'
+                value: { decision: EDIT, baseVersion: 1, selectedChangeIds: [f1a2b3c4-d5e6-4f70-8192-a3b4c5d6e7f8] }
+      responses:
+        '200':
+          description: Decision recorded; the active plan (new version for ACCEPT, unchanged for REJECT).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DecisionResult' }
+              examples:
+                accepted:
+                  value:
+                    proposalId: c0000000-0000-4000-8000-000000000001
+                    decision: ACCEPT
+                    decidedAt: '2026-11-16T18:05:00Z'
+                    plan: {"planId": "5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21", "date": "2026-11-16", "activeVersion": 2, "changeReason": "RECOVERY_ACCEPTED", "versionCreatedAt": "2026-11-16T18:05:00Z", "recoveryRequired": false, "items": [{"itemKey": "b0000000-0000-4000-8000-000000000201", "itemType": "MEAL", "mealSlot": "BREAKFAST", "plannedTime": "08:00", "meal": {"mealId": 1, "name": "Oatmeal with banana"}, "exercise": null, "plannedKcal": 426.4, "plannedProteinG": 17.2, "plannedFatG": 9.4, "plannedCarbsG": 72.0, "durationMin": null, "status": "COMPLETED"}, {"itemKey": "b0000000-0000-4000-8000-000000000202", "itemType": "MEAL", "mealSlot": "LUNCH", "plannedTime": "13:00", "meal": {"mealId": 4, "name": "Chicken rice bowl"}, "exercise": null, "plannedKcal": 629.9, "plannedProteinG": 54.7, "plannedFatG": 16.4, "plannedCarbsG": 63.0, "durationMin": null, "status": "COMPLETED"}, {"itemKey": "b0000000-0000-4000-8000-000000000204", "itemType": "WORKOUT", "mealSlot": null, "plannedTime": "18:00", "meal": null, "exercise": {"exerciseId": 1, "name": "Running, 10 km/h"}, "plannedKcal": null, "plannedProteinG": null, "plannedFatG": null, "plannedCarbsG": null, "durationMin": 30, "status": "SKIPPED"}, {"itemKey": "b0000000-0000-4000-8000-000000000203", "itemType": "MEAL", "mealSlot": "DINNER", "plannedTime": "19:30", "meal": {"mealId": 8, "name": "Tofu vegetable stir-fry"}, "exercise": null, "plannedKcal": 565.4, "plannedProteinG": 25.4, "plannedFatG": 20.6, "plannedCarbsG": 72.3, "durationMin": null, "status": "PLANNED"}, {"itemKey": "6c7d8e9f-a0b1-4c2d-8e3f-4a5b6c7d8e9f", "itemType": "WORKOUT", "mealSlot": null, "plannedTime": "20:30", "meal": null, "exercise": {"exerciseId": 3, "name": "Bodyweight circuit"}, "plannedKcal": null, "plannedProteinG": null, "plannedFatG": null, "plannedCarbsG": null, "durationMin": 20, "status": "PLANNED"}]}
+                rejected:
+                  value:
+                    proposalId: c0000000-0000-4000-8000-000000000003
+                    decision: REJECT
+                    decidedAt: '2026-11-16T14:10:00Z'
+                    plan: {"planId": "7d8e9fa0-b1c2-4d3e-8f4a-5b6c7d8e9fa0", "date": "2026-11-16", "activeVersion": 1, "changeReason": "INITIAL_PLAN", "versionCreatedAt": "2026-11-15T21:00:00Z", "recoveryRequired": true, "items": [{"itemKey": "b0000000-0000-4000-8000-000000000301", "itemType": "MEAL", "mealSlot": "BREAKFAST", "plannedTime": "07:30", "meal": {"mealId": 1, "name": "Oatmeal with banana"}, "exercise": null, "plannedKcal": 426.4, "plannedProteinG": 17.2, "plannedFatG": 9.4, "plannedCarbsG": 72.0, "durationMin": null, "status": "COMPLETED"}, {"itemKey": "b0000000-0000-4000-8000-000000000302", "itemType": "MEAL", "mealSlot": "LUNCH", "plannedTime": "12:30", "meal": {"mealId": 5, "name": "Pasta bolognese"}, "exercise": null, "plannedKcal": 567.8, "plannedProteinG": 39.4, "plannedFatG": 13.8, "plannedCarbsG": 69.0, "durationMin": null, "status": "COMPLETED"}, {"itemKey": "b0000000-0000-4000-8000-000000000303", "itemType": "WORKOUT", "mealSlot": null, "plannedTime": "17:00", "meal": null, "exercise": {"exerciseId": 5, "name": "Dumbbell strength training"}, "plannedKcal": null, "plannedProteinG": null, "plannedFatG": null, "plannedCarbsG": null, "durationMin": 45, "status": "PLANNED"}]}
+        '400':
+          description: Invalid decision or invalid edit.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              examples:
+                invalidDecision:
+                  value: { type: 'https://veya.example/problems/validation-failed', title: Request is not valid, status: 400, code: VALIDATION_FAILED, detail: One or more fields are invalid., instance: /api/v1/recovery-proposals/c0000000-0000-4000-8000-000000000001/decision, errors: [{ field: decision, message: 'must be one of ACCEPT, EDIT, REJECT', rejectedValue: MAYBE }] }
+                invalidEdit:
+                  value: { type: 'https://veya.example/problems/invalid-edit', title: Invalid edit, status: 400, code: INVALID_EDIT, detail: Select one or more distinct changes of this proposal., instance: /api/v1/recovery-proposals/c0000000-0000-4000-8000-000000000001/decision }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Stale baseVersion, or the proposal was already decided. Nothing changed.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              examples:
+                stale:
+                  value: { type: 'https://veya.example/problems/stale-plan-version', title: Plan version is outdated, status: 409, code: STALE_PLAN_VERSION, detail: 'Stale baseVersion 1: active plan version is 2.', instance: /api/v1/recovery-proposals/c0000000-0000-4000-8000-000000000002/decision, currentVersion: 2 }
+                alreadyDecided:
+                  value: { type: 'https://veya.example/problems/proposal-already-decided', title: Proposal already decided, status: 409, code: PROPOSAL_ALREADY_DECIDED, detail: This proposal was already accepted., instance: /api/v1/recovery-proposals/c0000000-0000-4000-8000-000000000001/decision }
+
+  # ----------------------------------------------------------------------------------------------- history
+  /api/v1/days/{date}/summary:
+    get:
+      tags: [history]
+      operationId: getDaySummary
+      summary: '[PLANNED] Dashboard of a day'
+      description: |
+        Planned and actual nutrition, remaining totals, activity and the active plan version (view `v_day_summary`).
+        Per decision Q10 it contains **no history browsing** (US-21 is Should); only the active version number is
+        returned. For a day without a plan, `plan` is null and nutrition comes from the diary.
+      x-veya-status: PLANNED
+      x-veya-module: history
+      x-veya-stories: [US-20, US-07]
+      x-veya-acceptance: 'US-20: given the selected date, when opened, then planned and actual nutrition, remaining totals, activity and active plan version are visible.'
+      x-veya-contract-source: BA Table 2.8 (GET /api/v1/days/{date}/summary) + Q10 (no history summary)
+      x-veya-authorization: Authenticated user; own data only.
+      x-veya-notes: Performance targets NFR-01 (p95 <= 500 ms) and NFR-03 (dashboard interactive <= 3 s).
+      x-veya-postman:
+        - name: Dashboard of 2026-11-16
+          expect: 200
+        - name: Dashboard with an invalid date
+          expect: 400
+          path: { date: '2026-13-45' }
+      parameters:
+        - { $ref: '#/components/parameters/DatePath' }
+      responses:
+        '200':
+          description: Day summary.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DaySummary' }
+              example:
+                date: '2026-11-16'
+                plan: {"planId": "5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21", "date": "2026-11-16", "activeVersion": 2, "changeReason": "RECOVERY_ACCEPTED", "versionCreatedAt": "2026-11-16T18:05:00Z", "recoveryRequired": false, "items": [{"itemKey": "b0000000-0000-4000-8000-000000000201", "itemType": "MEAL", "mealSlot": "BREAKFAST", "plannedTime": "08:00", "meal": {"mealId": 1, "name": "Oatmeal with banana"}, "exercise": null, "plannedKcal": 426.4, "plannedProteinG": 17.2, "plannedFatG": 9.4, "plannedCarbsG": 72.0, "durationMin": null, "status": "COMPLETED"}, {"itemKey": "b0000000-0000-4000-8000-000000000202", "itemType": "MEAL", "mealSlot": "LUNCH", "plannedTime": "13:00", "meal": {"mealId": 4, "name": "Chicken rice bowl"}, "exercise": null, "plannedKcal": 629.9, "plannedProteinG": 54.7, "plannedFatG": 16.4, "plannedCarbsG": 63.0, "durationMin": null, "status": "COMPLETED"}, {"itemKey": "b0000000-0000-4000-8000-000000000204", "itemType": "WORKOUT", "mealSlot": null, "plannedTime": "18:00", "meal": null, "exercise": {"exerciseId": 1, "name": "Running, 10 km/h"}, "plannedKcal": null, "plannedProteinG": null, "plannedFatG": null, "plannedCarbsG": null, "durationMin": 30, "status": "SKIPPED"}, {"itemKey": "b0000000-0000-4000-8000-000000000203", "itemType": "MEAL", "mealSlot": "DINNER", "plannedTime": "19:30", "meal": {"mealId": 8, "name": "Tofu vegetable stir-fry"}, "exercise": null, "plannedKcal": 565.4, "plannedProteinG": 25.4, "plannedFatG": 20.6, "plannedCarbsG": 72.3, "durationMin": null, "status": "PLANNED"}, {"itemKey": "6c7d8e9f-a0b1-4c2d-8e3f-4a5b6c7d8e9f", "itemType": "WORKOUT", "mealSlot": null, "plannedTime": "20:30", "meal": null, "exercise": {"exerciseId": 3, "name": "Bodyweight circuit"}, "plannedKcal": null, "plannedProteinG": null, "plannedFatG": null, "plannedCarbsG": null, "durationMin": 20, "status": "PLANNED"}]}
+                nutrition: { plannedKcal: 1621.7, consumedKcal: 1306.3, consumedProteinG: 49.2, consumedFatG: 47.4, consumedCarbsG: 182.0, targetKcal: 1900, remainingKcal: 593.7 }
+                activity: { plannedWorkoutMin: 50, completedWorkoutMin: 0 }
+                openItems: 2
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'JWT access token from `POST /api/v1/auth/login`, sent as `Authorization: Bearer <token>`. Lifetime/refresh: AQ-5 (open).'
+
+  headers:
+    Location:
+      description: URL of the created resource.
+      schema: { type: string, format: uri-reference }
+
+  parameters:
+    DatePath:
+      name: date
+      in: path
+      required: true
+      description: Local plan date (`YYYY-MM-DD`).
+      schema: { type: string, format: date }
+      example: '2026-11-16'
+    DateQuery:
+      name: date
+      in: query
+      required: true
+      description: Local plan date (`YYYY-MM-DD`).
+      schema: { type: string, format: date }
+      example: '2026-11-16'
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      example: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+    ItemKey:
+      name: itemKey
+      in: path
+      required: true
+      description: Logical identity of a plan item; stays the same across versions.
+      schema: { type: string, format: uuid }
+      example: b0000000-0000-4000-8000-000000000203
+    ProposalId:
+      name: proposalId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      example: c0000000-0000-4000-8000-000000000001
+    FoodEntryId:
+      name: entryId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      example: 9d4e5f60-7182-4930-a4b5-c6d7e8f90a1b
+    SavedMealId:
+      name: savedMealId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      example: e0000000-0000-4000-8000-000000000001
+    ConsentId:
+      name: consentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      example: 7a2d3b0f-4c8e-4f90-b2c3-d4e5f6071829
+    Limit50:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+    Limit100:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+
+  responses:
+    ValidationFailed:
+      description: Malformed JSON, invalid parameter or field values (nothing was changed).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/validation-failed', title: Request is not valid, status: 400, code: VALIDATION_FAILED, detail: One or more fields are invalid., instance: /api/v1/me/profile, errors: [{ field: energyTargetKcal, message: must be between 500 and 10000, rejectedValue: 100 }] }
+    Unauthorized:
+      description: Missing, invalid or expired token, or the account no longer exists.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/authentication-required', title: Authentication required, status: 401, code: AUTHENTICATION_REQUIRED, detail: A valid bearer token is required., instance: /api/v1/me }
+    Forbidden:
+      description: 'The resource belongs to another user (US-30, NFR-08). No data of that user is disclosed. OPEN (AQ-2): 403 for another user''s existing resource vs 404 - the database routines report "not found or not owned" as VY404, so the API must check ownership first; to be confirmed.'
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/access-denied', title: Access denied, status: 403, code: ACCESS_DENIED, detail: You cannot access this resource., instance: /api/v1/plans/5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21 }
+    NotFound:
+      description: The resource does not exist.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/resource-not-found', title: Not found, status: 404, code: RESOURCE_NOT_FOUND, detail: The requested resource does not exist., instance: /api/v1/plans/00000000-0000-4000-8000-000000000000 }
+    StaleVersion:
+      description: 'baseVersion is not the active plan version (NFR-10). Nothing changed; reload the plan and retry.'
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/stale-plan-version', title: Plan version is outdated, status: 409, code: STALE_PLAN_VERSION, detail: 'Stale plan version: expected 1, current 2.', instance: /api/v1/plans/5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21/items/b0000000-0000-4000-8000-000000000203/replacement, currentVersion: 2 }
+    ItemAlreadyRecorded:
+      description: The item is already completed/skipped/missed and is frozen (US-16).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/item-frozen', title: Item cannot be changed, status: 409, code: ITEM_FROZEN, detail: Completed or recorded items are frozen and cannot be replaced., instance: /api/v1/meal-options }
+    StatusAlreadyRecorded:
+      description: A status/record for this planned item already exists.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/status-already-recorded', title: Status already recorded, status: 409, code: STATUS_ALREADY_RECORDED, detail: Status of this workout is already recorded., instance: /api/v1/activity-entries }
+    ImmutableHistory:
+      description: The request tried to link to or change a superseded plan version.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/immutable-history', title: History cannot be changed, status: 409, code: IMMUTABLE_HISTORY, detail: Entries can only be linked to items of the active plan version., instance: /api/v1/food-entries }
+    HardConstraintViolation:
+      description: The requested item breaks a hard constraint (exclusion, ingredient, time or equipment).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/hard-constraint-violation', title: Hard constraint violated, status: 422, code: HARD_CONSTRAINT_VIOLATION, detail: 'Peanut butter toast contains PEANUT, which is excluded in your profile.', instance: /api/v1/plans, blockingConstraints: [{ type: FOOD_EXCLUSION, message: Contains PEANUT., itemKey: null }] }
+    NoFeasibleAlternative:
+      description: No compliant alternative exists (US-10 / US-14); the old plan stays active.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/no-feasible-alternative', title: No feasible alternative, status: 422, code: NO_FEASIBLE_ALTERNATIVE, detail: No meal fits the remaining time and exclusions., instance: /api/v1/meal-options, blockingConstraints: [{ type: TIME, message: Only 10 minutes are available for dinner preparation., itemKey: b0000000-0000-4000-8000-000000000203 }] }
+    ProviderUnavailable:
+      description: The external provider failed (5xx) and there are no local results (US-31). Manual entry stays available.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/provider-unavailable', title: Food provider unavailable, status: 502, code: PROVIDER_UNAVAILABLE, detail: The food provider is not available. You can enter the food manually., instance: '/api/v1/foods?q=quinoa', manualEntryAllowed: true }
+    ProviderTimeout:
+      description: The external provider timed out and there are no local results (US-05, US-31).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://veya.example/problems/provider-timeout', title: Food provider timed out, status: 504, code: PROVIDER_TIMEOUT, detail: The food provider did not answer in time. Retry or enter the food manually., instance: '/api/v1/foods?q=quinoa', manualEntryAllowed: true }
+
+  examples:
+    PlanVersion1:
+      summary: Plan version 1 (Anna, 2026-11-16 before the deviation)
+      value:
+        planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+        date: '2026-11-16'
+        activeVersion: 1
+        changeReason: INITIAL_PLAN
+        versionCreatedAt: '2026-11-15T20:00:00Z'
+        recoveryRequired: false
+        items:
+          - { itemKey: b0000000-0000-4000-8000-000000000201, itemType: MEAL, mealSlot: BREAKFAST, plannedTime: '08:00', meal: { mealId: 1, name: Oatmeal with banana }, exercise: null, plannedKcal: 426.4, plannedProteinG: 17.2, plannedFatG: 9.4, plannedCarbsG: 72.0, durationMin: null, status: PLANNED }
+          - { itemKey: b0000000-0000-4000-8000-000000000202, itemType: MEAL, mealSlot: LUNCH, plannedTime: '13:00', meal: { mealId: 4, name: Chicken rice bowl }, exercise: null, plannedKcal: 629.9, plannedProteinG: 54.7, plannedFatG: 16.4, plannedCarbsG: 63.0, durationMin: null, status: PLANNED }
+          - { itemKey: b0000000-0000-4000-8000-000000000204, itemType: WORKOUT, mealSlot: null, plannedTime: '18:00', meal: null, exercise: { exerciseId: 1, name: 'Running, 10 km/h' }, plannedKcal: null, plannedProteinG: null, plannedFatG: null, plannedCarbsG: null, durationMin: 30, status: PLANNED }
+          - { itemKey: b0000000-0000-4000-8000-000000000203, itemType: MEAL, mealSlot: DINNER, plannedTime: '19:30', meal: { mealId: 7, name: Salmon with potatoes }, exercise: null, plannedKcal: 560.5, plannedProteinG: 40.7, plannedFatG: 19.2, plannedCarbsG: 56.9, durationMin: null, status: PLANNED }
+    PlanVersion2:
+      summary: Version 2 after replacing the dinner (MEAL_REPLACEMENT)
+      value:
+        planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+        date: '2026-11-16'
+        activeVersion: 2
+        changeReason: MEAL_REPLACEMENT
+        versionCreatedAt: '2026-11-16T15:00:00Z'
+        recoveryRequired: false
+        items:
+          - { itemKey: b0000000-0000-4000-8000-000000000201, itemType: MEAL, mealSlot: BREAKFAST, plannedTime: '08:00', meal: { mealId: 1, name: Oatmeal with banana }, exercise: null, plannedKcal: 426.4, plannedProteinG: 17.2, plannedFatG: 9.4, plannedCarbsG: 72.0, durationMin: null, status: COMPLETED }
+          - { itemKey: b0000000-0000-4000-8000-000000000202, itemType: MEAL, mealSlot: LUNCH, plannedTime: '13:00', meal: { mealId: 4, name: Chicken rice bowl }, exercise: null, plannedKcal: 629.9, plannedProteinG: 54.7, plannedFatG: 16.4, plannedCarbsG: 63.0, durationMin: null, status: PLANNED }
+          - { itemKey: b0000000-0000-4000-8000-000000000204, itemType: WORKOUT, mealSlot: null, plannedTime: '18:00', meal: null, exercise: { exerciseId: 1, name: 'Running, 10 km/h' }, plannedKcal: null, plannedProteinG: null, plannedFatG: null, plannedCarbsG: null, durationMin: 30, status: PLANNED }
+          - { itemKey: b0000000-0000-4000-8000-000000000203, itemType: MEAL, mealSlot: DINNER, plannedTime: '19:30', meal: { mealId: 8, name: Tofu vegetable stir-fry }, exercise: null, plannedKcal: 565.4, plannedProteinG: 25.4, plannedFatG: 20.6, plannedCarbsG: 72.3, durationMin: null, status: PLANNED }
+    PlanVersion2Recovered:
+      summary: Version 2 created by an accepted recovery proposal (RECOVERY_ACCEPTED)
+      value:
+        planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+        date: '2026-11-16'
+        activeVersion: 2
+        changeReason: RECOVERY_ACCEPTED
+        versionCreatedAt: '2026-11-16T18:05:00Z'
+        recoveryRequired: false
+        items:
+          - { itemKey: b0000000-0000-4000-8000-000000000201, itemType: MEAL, mealSlot: BREAKFAST, plannedTime: '08:00', meal: { mealId: 1, name: Oatmeal with banana }, exercise: null, plannedKcal: 426.4, plannedProteinG: 17.2, plannedFatG: 9.4, plannedCarbsG: 72.0, durationMin: null, status: COMPLETED }
+          - { itemKey: b0000000-0000-4000-8000-000000000202, itemType: MEAL, mealSlot: LUNCH, plannedTime: '13:00', meal: { mealId: 4, name: Chicken rice bowl }, exercise: null, plannedKcal: 629.9, plannedProteinG: 54.7, plannedFatG: 16.4, plannedCarbsG: 63.0, durationMin: null, status: COMPLETED }
+          - { itemKey: b0000000-0000-4000-8000-000000000204, itemType: WORKOUT, mealSlot: null, plannedTime: '18:00', meal: null, exercise: { exerciseId: 1, name: 'Running, 10 km/h' }, plannedKcal: null, plannedProteinG: null, plannedFatG: null, plannedCarbsG: null, durationMin: 30, status: SKIPPED }
+          - { itemKey: b0000000-0000-4000-8000-000000000203, itemType: MEAL, mealSlot: DINNER, plannedTime: '19:30', meal: { mealId: 8, name: Tofu vegetable stir-fry }, exercise: null, plannedKcal: 565.4, plannedProteinG: 25.4, plannedFatG: 20.6, plannedCarbsG: 72.3, durationMin: null, status: PLANNED }
+          - { itemKey: 6c7d8e9f-a0b1-4c2d-8e3f-4a5b6c7d8e9f, itemType: WORKOUT, mealSlot: null, plannedTime: '20:30', meal: null, exercise: { exerciseId: 3, name: Bodyweight circuit }, plannedKcal: null, plannedProteinG: null, plannedFatG: null, plannedCarbsG: null, durationMin: 20, status: PLANNED }
+    PlanVersion1Rejected:
+      summary: Plan unchanged after REJECT (Max, 2026-11-16)
+      value:
+        planId: 7d8e9fa0-b1c2-4d3e-8f4a-5b6c7d8e9fa0
+        date: '2026-11-16'
+        activeVersion: 1
+        changeReason: INITIAL_PLAN
+        versionCreatedAt: '2026-11-15T21:00:00Z'
+        recoveryRequired: true
+        items:
+          - { itemKey: b0000000-0000-4000-8000-000000000301, itemType: MEAL, mealSlot: BREAKFAST, plannedTime: '07:30', meal: { mealId: 1, name: Oatmeal with banana }, exercise: null, plannedKcal: 426.4, plannedProteinG: 17.2, plannedFatG: 9.4, plannedCarbsG: 72.0, durationMin: null, status: COMPLETED }
+          - { itemKey: b0000000-0000-4000-8000-000000000302, itemType: MEAL, mealSlot: LUNCH, plannedTime: '12:30', meal: { mealId: 5, name: Pasta bolognese }, exercise: null, plannedKcal: 567.8, plannedProteinG: 39.4, plannedFatG: 13.8, plannedCarbsG: 69.0, durationMin: null, status: COMPLETED }
+          - { itemKey: b0000000-0000-4000-8000-000000000303, itemType: WORKOUT, mealSlot: null, plannedTime: '17:00', meal: null, exercise: { exerciseId: 5, name: Dumbbell strength training }, plannedKcal: null, plannedProteinG: null, plannedFatG: null, plannedCarbsG: null, durationMin: 45, status: PLANNED }
+    RecoveryProposalPending:
+      summary: Proposal for Anna's 2026-11-16 (lunch +250 kcal, run skipped, fish unavailable)
+      value:
+        proposalId: c0000000-0000-4000-8000-000000000001
+        planId: 5e0c7f4a-1b2d-4c3e-9f8a-7b6c5d4e3f21
+        baseVersion: 1
+        status: PENDING
+        createdAt: '2026-11-16T18:00:00Z'
+        changes:
+          - changeId: f1a2b3c4-d5e6-4f70-8192-a3b4c5d6e7f8
+            changeNo: 1
+            changeType: REPLACE
+            targetItemKey: b0000000-0000-4000-8000-000000000203
+            before: { itemKey: b0000000-0000-4000-8000-000000000203, itemType: MEAL, mealSlot: DINNER, plannedTime: '19:30', meal: { mealId: 7, name: Salmon with potatoes }, exercise: null, plannedKcal: 560.5, plannedProteinG: 40.7, plannedFatG: 19.2, plannedCarbsG: 56.9, durationMin: null, status: PLANNED }
+            after: { itemType: MEAL, mealSlot: DINNER, plannedTime: '19:30', meal: { mealId: 8, name: Tofu vegetable stir-fry }, exercise: null, plannedKcal: 565.4, plannedProteinG: 25.4, plannedFatG: 20.6, plannedCarbsG: 72.3, durationMin: null }
+            reason: { category: INGREDIENT, text: 'Salmon is unavailable today; the tofu stir-fry contains no fish, takes 20 minutes and keeps the remaining protein target.' }
+          - changeId: a2b3c4d5-e6f7-4081-92a3-b4c5d6e7f809
+            changeNo: 2
+            changeType: ADD
+            targetItemKey: null
+            before: null
+            after: { itemType: WORKOUT, mealSlot: null, plannedTime: '20:30', meal: null, exercise: { exerciseId: 3, name: Bodyweight circuit }, plannedKcal: null, plannedProteinG: null, plannedFatG: null, plannedCarbsG: null, durationMin: 20 }
+            reason: { category: TIME, text: The 30-minute run was skipped; a 20-minute bodyweight circuit fits the 40 available minutes and needs no equipment. }
+        totals: { targetKcal: 1900, consumedKcal: 1306.3, remainingPlannedKcalBefore: 560.5, remainingPlannedKcalAfter: 565.4, forecastKcal: 1871.7 }
+
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [UP, DOWN, OUT_OF_SERVICE, UNKNOWN] }
+        groups: { type: array, items: { type: string } }
+    Problem:
+      type: object
+      description: RFC 9457 Problem Details with VEYA extensions. Content type `application/problem+json`.
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri, description: Problem type URI (stable per code). }
+        title: { type: string, description: Short human-readable summary. }
+        status: { type: integer, minimum: 400, maximum: 599 }
+        detail: { type: string, description: Human-readable explanation of this occurrence. }
+        instance: { type: string, description: Request path of this occurrence. }
+        code: { $ref: '#/components/schemas/ErrorCode' }
+        errors:
+          type: array
+          description: Field errors for VALIDATION_FAILED.
+          items: { $ref: '#/components/schemas/FieldError' }
+        blockingConstraints:
+          type: array
+          description: Constraints that make the request infeasible (422).
+          items: { $ref: '#/components/schemas/BlockingConstraint' }
+        currentVersion:
+          type: integer
+          minimum: 1
+          description: Active plan version, returned with STALE_PLAN_VERSION.
+        manualEntryAllowed:
+          type: boolean
+          description: Provider errors - the client may offer manual entry.
+        traceId:
+          type: string
+          description: Request ID for support (NFR-18, PROPOSED).
+    ErrorCode:
+      type: string
+      description: Stable error codes (NFR-14). PROPOSED list.
+      enum: [VALIDATION_FAILED, MALFORMED_REQUEST, CONFIRMATION_REQUIRED, INVALID_EDIT, AUTHENTICATION_REQUIRED, INVALID_CREDENTIALS, ACCESS_DENIED, RESOURCE_NOT_FOUND, PROFILE_NOT_FOUND, PLAN_NOT_FOUND, EMAIL_ALREADY_REGISTERED, CONSENT_ALREADY_ACTIVE, CONSENT_ALREADY_WITHDRAWN, SAVED_MEAL_NAME_TAKEN, PLAN_ALREADY_EXISTS, STALE_PLAN_VERSION, PROPOSAL_ALREADY_DECIDED, RECOVERY_NOT_REQUIRED, ITEM_FROZEN, STATUS_ALREADY_RECORDED, IMMUTABLE_HISTORY, HARD_CONSTRAINT_VIOLATION, NO_FEASIBLE_ALTERNATIVE, NO_FEASIBLE_MEAL_PLAN, RECOVERY_NOT_FEASIBLE, PROVIDER_UNAVAILABLE, PROVIDER_TIMEOUT, INTERNAL_ERROR]
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string, description: 'JSON path of the field, e.g. `items[2].mealId`.' }
+        message: { type: string }
+        rejectedValue: { description: The rejected value (never for passwords). }
+    BlockingConstraint:
+      type: object
+      required: [type, message]
+      properties:
+        type: { type: string, enum: [TIME, EQUIPMENT, INGREDIENT, FOOD_EXCLUSION, NUTRITION_TARGET] }
+        message: { type: string }
+        itemKey: { type: [string, 'null'], format: uuid, description: 'Affected plan item, if any.' }
+
+    Code: { type: string, pattern: '^[A-Z][A-Z0-9_]{1,29}$' }
+    MealSlot: { type: string, enum: [BREAKFAST, LUNCH, DINNER, SNACK], description: 'Codes from `meal_slot`.' }
+    Goal: { type: string, enum: [LOSE_WEIGHT, MAINTAIN_WEIGHT, GAIN_WEIGHT], description: 'Codes from `goal_type`.' }
+    LocalDate: { type: string, format: date, examples: ['2026-11-16'] }
+    LocalTime: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', examples: ['19:30'] }
+    Kcal: { type: number, minimum: 0, maximum: 10000, description: 'kcal, stored with one decimal place (numeric(7,1)).' }
+    Grams: { type: number, minimum: 0, maximum: 1000, description: 'grams, stored with one decimal place.' }
+    Macros:
+      type: object
+      required: [kcal, proteinG, fatG, carbsG]
+      properties:
+        kcal: { $ref: '#/components/schemas/Kcal' }
+        proteinG: { $ref: '#/components/schemas/Grams' }
+        fatG: { $ref: '#/components/schemas/Grams' }
+        carbsG: { $ref: '#/components/schemas/Grams' }
+    NullableMacros:
+      type: object
+      properties:
+        kcal: { type: [number, 'null'] }
+        proteinG: { type: [number, 'null'] }
+        fatG: { type: [number, 'null'] }
+        carbsG: { type: [number, 'null'] }
+    CodeName:
+      type: object
+      required: [code, name]
+      properties:
+        code: { $ref: '#/components/schemas/Code' }
+        name: { type: string }
+    ReferenceData:
+      type: object
+      required: [goals, mealSlots, equipment, ingredients]
+      properties:
+        goals: { type: array, items: { $ref: '#/components/schemas/CodeName' } }
+        mealSlots:
+          type: array
+          items:
+            allOf:
+              - { $ref: '#/components/schemas/CodeName' }
+              - type: object
+                required: [sortOrder]
+                properties: { sortOrder: { type: integer, minimum: 1 } }
+        equipment: { type: array, items: { $ref: '#/components/schemas/CodeName' } }
+        ingredients: { type: array, items: { $ref: '#/components/schemas/CodeName' } }
+
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password, adultConfirmed, consentDocumentIds]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 8, maxLength: 72, writeOnly: true, description: Plain password over HTTPS; stored only as a bcrypt/Argon2id hash. Length rule PROPOSED. }
+        adultConfirmed: { type: boolean, const: true, description: 'Explicit "I am at least 18" confirmation (Q8, Q13). Stored as adultConfirmedAt.' }
+        consentDocumentIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          description: Accepted documents from GET /api/v1/consent-documents. Which ones are mandatory is AQ-4 (PROPOSED - both current versions).
+          items: { type: integer, minimum: 1 }
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 1, maxLength: 72, writeOnly: true }
+    TokenResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn]
+      properties:
+        accessToken: { type: string, description: JWT; the subject is the user id. }
+        tokenType: { type: string, const: Bearer }
+        expiresIn: { type: integer, minimum: 1, description: Seconds until expiry (PROPOSED 3600). }
+    Account:
+      type: object
+      required: [userId, email, adultConfirmedAt, createdAt, hasProfile]
+      properties:
+        userId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        adultConfirmedAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        hasProfile: { type: boolean }
+    DataExport:
+      type: object
+      description: Output of the database function export_user_data (LEG-4, Q6). Nested record objects use the database column names (snake_case). No password hash.
+      required: [exportedAt, account, consents, foodEntries, activityEntries, savedMeals, plans]
+      properties:
+        exportedAt: { type: string, format: date-time }
+        account: { type: object }
+        profile: { type: [object, 'null'] }
+        foodExclusions: { type: array, items: { type: string } }
+        consents: { type: array, items: { type: object } }
+        dailyConstraints: { type: array, items: { type: object } }
+        foodEntries: { type: array, items: { type: object } }
+        activityEntries: { type: array, items: { type: object } }
+        savedMeals: { type: array, items: { type: object } }
+        plans: { type: array, items: { type: object } }
+    ConsentDocument:
+      type: object
+      required: [consentDocumentId, consentType, version, publishedOn, summary]
+      properties:
+        consentDocumentId: { type: integer, minimum: 1 }
+        consentType: { type: string, enum: [PRIVACY_NOTICE, HEALTH_DATA_CONSENT] }
+        version: { type: string, pattern: '^[0-9]+\.[0-9]+$' }
+        publishedOn: { type: string, format: date }
+        summary: { type: string }
+    UserConsent:
+      type: object
+      required: [consentId, consentDocumentId, consentType, version, grantedAt, withdrawnAt]
+      properties:
+        consentId: { type: string, format: uuid }
+        consentDocumentId: { type: integer }
+        consentType: { type: string, enum: [PRIVACY_NOTICE, HEALTH_DATA_CONSENT] }
+        version: { type: string }
+        grantedAt: { type: string, format: date-time }
+        withdrawnAt: { type: [string, 'null'], format: date-time }
+    GrantConsentRequest:
+      type: object
+      additionalProperties: false
+      required: [consentDocumentId]
+      properties:
+        consentDocumentId: { type: integer, minimum: 1 }
+
+    ProfileRequest:
+      type: object
+      required: [goal, energyTargetKcal, proteinTargetG, fatTargetG, carbsTargetG, foodExclusions]
+      properties:
+        goal: { $ref: '#/components/schemas/Goal' }
+        energyTargetKcal: { type: integer, minimum: 500, maximum: 10000, description: Daily target entered by the user (not calculated). }
+        proteinTargetG: { type: number, minimum: 0, maximum: 1000 }
+        fatTargetG: { type: number, minimum: 0, maximum: 1000 }
+        carbsTargetG: { type: number, minimum: 0, maximum: 1000 }
+        foodExclusions:
+          type: array
+          uniqueItems: true
+          description: Permanent exclusions - ingredient codes (Q5).
+          items: { $ref: '#/components/schemas/Code' }
+    Profile:
+      allOf:
+        - { $ref: '#/components/schemas/ProfileRequest' }
+        - type: object
+          required: [updatedAt]
+          properties:
+            updatedAt: { type: string, format: date-time }
+    DailyConstraintsRequest:
+      type: object
+      required: [availableTimeMin, availableEquipment, availableIngredients, excludedIngredients]
+      properties:
+        availableTimeMin: { type: [integer, 'null'], minimum: 0, maximum: 1440, description: Minutes available for remaining activity/preparation; null = not restricted. }
+        availableEquipment: { type: array, uniqueItems: true, items: { $ref: '#/components/schemas/Code' }, description: Equipment available today; empty = none. }
+        availableIngredients: { type: array, uniqueItems: true, items: { $ref: '#/components/schemas/Code' }, description: Ingredients the user has today (Q3). }
+        excludedIngredients: { type: array, uniqueItems: true, items: { $ref: '#/components/schemas/Code' }, description: Temporary exclusions for this day (Q5); must not overlap availableIngredients. }
+    DailyConstraints:
+      allOf:
+        - type: object
+          required: [date]
+          properties:
+            date: { $ref: '#/components/schemas/LocalDate' }
+        - { $ref: '#/components/schemas/DailyConstraintsRequest' }
+    DailyConstraintsResult:
+      type: object
+      required: [constraints, planImpact]
+      properties:
+        constraints: { $ref: '#/components/schemas/DailyConstraints' }
+        planImpact:
+          type: [object, 'null']
+          description: Null when there is no plan for the date.
+          required: [planId, recoveryRequired, infeasibleItems]
+          properties:
+            planId: { type: string, format: uuid }
+            recoveryRequired: { type: boolean }
+            infeasibleItems:
+              type: array
+              items:
+                type: object
+                required: [itemKey, reason]
+                properties:
+                  itemKey: { type: string, format: uuid }
+                  reason: { type: string }
+
+    FoodItem:
+      type: object
+      required: [foodId, name, source, kcalPer100g, proteinPer100g, fatPer100g, carbsPer100g]
+      properties:
+        foodId: { type: integer, minimum: 1 }
+        name: { type: string }
+        source: { type: string, enum: [LOCAL, PROVIDER] }
+        kcalPer100g: { type: number, minimum: 0, maximum: 900 }
+        proteinPer100g: { type: number, minimum: 0, maximum: 100 }
+        fatPer100g: { type: number, minimum: 0, maximum: 100 }
+        carbsPer100g: { type: number, minimum: 0, maximum: 100 }
+        attribution: { type: [string, 'null'], description: Provider attribution required by its licence (LEG-7). }
+    FoodSearchResult:
+      type: object
+      required: [providerStatus, items]
+      properties:
+        providerStatus: { type: string, enum: [OK, UNAVAILABLE], description: 'UNAVAILABLE = provider failed; only local results are shown (PROPOSED, AQ-7).' }
+        items: { type: array, items: { $ref: '#/components/schemas/FoodItem' } }
+    MealCandidate:
+      type: object
+      required: [mealId, name, mealSlot, prepTimeMin, kcal, proteinG, fatG, carbsG, ingredientCodes]
+      properties:
+        mealId: { type: integer, minimum: 1 }
+        name: { type: string }
+        mealSlot: { oneOf: [{ $ref: '#/components/schemas/MealSlot' }, { type: 'null' }], description: Preferred slot; null = any slot. }
+        prepTimeMin: { type: integer, minimum: 0, maximum: 600 }
+        kcal: { type: number }
+        proteinG: { type: number }
+        fatG: { type: number }
+        carbsG: { type: number }
+        ingredientCodes: { type: array, items: { $ref: '#/components/schemas/Code' } }
+    FoodEntryRequest:
+      type: object
+      additionalProperties: false
+      required: [date, mealSlot, inputSource, foodName, portionG, kcal, proteinG, fatG, carbsG]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        mealSlot: { $ref: '#/components/schemas/MealSlot' }
+        inputSource: { type: string, enum: [CATALOG, MANUAL], description: 'SAVED_MEAL entries are created by POST /saved-meals/{id}/entries. Photo input is post-MVP.' }
+        foodId: { type: [integer, 'null'], minimum: 1, description: Required when inputSource = CATALOG. }
+        planItemKey: { type: [string, 'null'], format: uuid, description: Planned MEAL of the active version on the same date. }
+        foodName: { type: string, minLength: 1, maxLength: 200 }
+        portionG: { type: number, exclusiveMinimum: 0, maximum: 5000 }
+        kcal: { $ref: '#/components/schemas/Kcal' }
+        proteinG: { $ref: '#/components/schemas/Grams' }
+        fatG: { $ref: '#/components/schemas/Grams' }
+        carbsG: { $ref: '#/components/schemas/Grams' }
+    FoodEntryPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        mealSlot: { $ref: '#/components/schemas/MealSlot' }
+        foodName: { type: string, minLength: 1, maxLength: 200 }
+        portionG: { type: number, exclusiveMinimum: 0, maximum: 5000 }
+        kcal: { $ref: '#/components/schemas/Kcal' }
+        proteinG: { $ref: '#/components/schemas/Grams' }
+        fatG: { $ref: '#/components/schemas/Grams' }
+        carbsG: { $ref: '#/components/schemas/Grams' }
+    FoodEntry:
+      type: object
+      required: [entryId, date, mealSlot, inputSource, foodId, savedMealId, planItemKey, foodName, portionG, kcal, proteinG, fatG, carbsG, createdAt, updatedAt]
+      properties:
+        entryId: { type: string, format: uuid }
+        date: { $ref: '#/components/schemas/LocalDate' }
+        mealSlot: { $ref: '#/components/schemas/MealSlot' }
+        inputSource: { type: string, enum: [CATALOG, MANUAL, SAVED_MEAL] }
+        foodId: { type: [integer, 'null'] }
+        savedMealId: { type: [string, 'null'], format: uuid }
+        planItemKey: { type: [string, 'null'], format: uuid }
+        foodName: { type: string }
+        portionG: { type: number }
+        kcal: { type: number }
+        proteinG: { type: number }
+        fatG: { type: number }
+        carbsG: { type: number }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    FoodEntryResult:
+      type: object
+      required: [entry, recoveryRequired]
+      properties:
+        entry: { $ref: '#/components/schemas/FoodEntry' }
+        recoveryRequired: { type: [boolean, 'null'], description: State of the day's plan after the change; null when there is no plan for the date. }
+    SavedMealLine:
+      type: object
+      required: [foodName, portionG, kcal, proteinG, fatG, carbsG]
+      properties:
+        foodId: { type: [integer, 'null'], minimum: 1 }
+        foodName: { type: string, minLength: 1, maxLength: 200 }
+        portionG: { type: number, exclusiveMinimum: 0, maximum: 5000 }
+        kcal: { $ref: '#/components/schemas/Kcal' }
+        proteinG: { $ref: '#/components/schemas/Grams' }
+        fatG: { $ref: '#/components/schemas/Grams' }
+        carbsG: { $ref: '#/components/schemas/Grams' }
+    SavedMealRequest:
+      type: object
+      additionalProperties: false
+      required: [name, items]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        items: { type: array, minItems: 1, maxItems: 30, items: { $ref: '#/components/schemas/SavedMealLine' } }
+    SavedMeal:
+      type: object
+      required: [savedMealId, name, createdAt, items, totals]
+      properties:
+        savedMealId: { type: string, format: uuid }
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            allOf:
+              - type: object
+                required: [lineNo]
+                properties: { lineNo: { type: integer, minimum: 1 } }
+              - { $ref: '#/components/schemas/SavedMealLine' }
+        totals: { $ref: '#/components/schemas/Macros' }
+    LogSavedMealRequest:
+      type: object
+      additionalProperties: false
+      required: [date, mealSlot]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        mealSlot: { $ref: '#/components/schemas/MealSlot' }
+        planItemKey: { type: [string, 'null'], format: uuid }
+    NutritionSummary:
+      type: object
+      required: [date, consumed, target, remaining, entryCount]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        consumed: { $ref: '#/components/schemas/Macros' }
+        target: { $ref: '#/components/schemas/NullableMacros' }
+        remaining: { $ref: '#/components/schemas/NullableMacros' }
+        entryCount: { type: integer, minimum: 0 }
+
+    PlanItemRef:
+      type: object
+      required: [itemType, mealSlot, plannedTime, meal, exercise, plannedKcal, plannedProteinG, plannedFatG, plannedCarbsG, durationMin]
+      description: 'MEAL items have mealSlot, meal and planned nutrition; WORKOUT items have exercise and durationMin (other fields null).'
+      properties:
+        itemType: { type: string, enum: [MEAL, WORKOUT] }
+        mealSlot: { oneOf: [{ $ref: '#/components/schemas/MealSlot' }, { type: 'null' }] }
+        plannedTime: { oneOf: [{ $ref: '#/components/schemas/LocalTime' }, { type: 'null' }] }
+        meal:
+          type: [object, 'null']
+          required: [mealId, name]
+          properties: { mealId: { type: integer }, name: { type: string } }
+        exercise:
+          type: [object, 'null']
+          required: [exerciseId, name]
+          properties: { exerciseId: { type: integer }, name: { type: string } }
+        plannedKcal: { type: [number, 'null'] }
+        plannedProteinG: { type: [number, 'null'] }
+        plannedFatG: { type: [number, 'null'] }
+        plannedCarbsG: { type: [number, 'null'] }
+        durationMin: { type: [integer, 'null'], minimum: 1, maximum: 600 }
+    PlanItem:
+      allOf:
+        - type: object
+          required: [itemKey, status]
+          properties:
+            itemKey: { type: string, format: uuid, description: Logical identity across versions. }
+            status: { type: string, enum: [PLANNED, COMPLETED, SKIPPED, MISSED, CHANGED] }
+        - { $ref: '#/components/schemas/PlanItemRef' }
+    Plan:
+      type: object
+      required: [planId, date, activeVersion, changeReason, versionCreatedAt, recoveryRequired, items]
+      properties:
+        planId: { type: string, format: uuid }
+        date: { $ref: '#/components/schemas/LocalDate' }
+        activeVersion: { type: integer, minimum: 1, description: Use as baseVersion for changes and decisions. }
+        changeReason: { type: string, enum: [INITIAL_PLAN, MEAL_REPLACEMENT, EXERCISE_REPLACEMENT, RECOVERY_ACCEPTED, RECOVERY_EDITED] }
+        versionCreatedAt: { type: string, format: date-time }
+        recoveryRequired: { type: boolean }
+        items: { type: array, description: Items of the active version sorted by plannedTime (items without time last)., items: { $ref: '#/components/schemas/PlanItem' } }
+    PlanItemInput:
+      type: object
+      additionalProperties: false
+      required: [itemType]
+      description: 'MEAL: mealSlot + mealId required. WORKOUT: exerciseId + durationMin required. Planned nutrition is taken from the catalogue.'
+      properties:
+        itemType: { type: string, enum: [MEAL, WORKOUT] }
+        mealSlot: { $ref: '#/components/schemas/MealSlot' }
+        plannedTime: { $ref: '#/components/schemas/LocalTime' }
+        mealId: { type: integer, minimum: 1 }
+        exerciseId: { type: integer, minimum: 1 }
+        durationMin: { type: integer, minimum: 1, maximum: 600 }
+    CreatePlanRequest:
+      type: object
+      additionalProperties: false
+      required: [date, items]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        items: { type: array, minItems: 1, maxItems: 20, items: { $ref: '#/components/schemas/PlanItemInput' } }
+    MealPlanSuggestionRequest:
+      type: object
+      additionalProperties: false
+      required: [date]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        mealSlots: { type: array, uniqueItems: true, minItems: 1, items: { $ref: '#/components/schemas/MealSlot' }, description: 'Default: BREAKFAST, LUNCH, DINNER.' }
+    MealPlanSuggestion:
+      type: object
+      required: [date, items, totals, target]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        items:
+          type: array
+          items:
+            type: object
+            required: [itemType, mealSlot, mealId, mealName, kcal, proteinG, fatG, carbsG]
+            properties:
+              itemType: { type: string, const: MEAL }
+              mealSlot: { $ref: '#/components/schemas/MealSlot' }
+              plannedTime: { $ref: '#/components/schemas/LocalTime' }
+              mealId: { type: integer }
+              mealName: { type: string }
+              kcal: { type: number }
+              proteinG: { type: number }
+              fatG: { type: number }
+              carbsG: { type: number }
+        totals: { $ref: '#/components/schemas/Macros' }
+        target: { $ref: '#/components/schemas/NullableMacros' }
+    Reason:
+      type: object
+      required: [category, text]
+      properties:
+        category: { type: string, enum: [NUTRITION, TIME, INGREDIENT, EQUIPMENT, OTHER], description: Constraint the reason is tied to (US-17). }
+        text: { type: string, maxLength: 500 }
+    ReplacementOptionsRequest:
+      type: object
+      additionalProperties: false
+      required: [planId, itemKey]
+      properties:
+        planId: { type: string, format: uuid }
+        itemKey: { type: string, format: uuid, description: 'A PLANNED item of the active version (MEAL for meal-options, WORKOUT for exercise-options).' }
+    MealOptions:
+      type: object
+      required: [planId, itemKey, baseVersion, options]
+      properties:
+        planId: { type: string, format: uuid }
+        itemKey: { type: string, format: uuid }
+        baseVersion: { type: integer, minimum: 1 }
+        options:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [mealId, name, kcal, proteinG, fatG, carbsG, prepTimeMin, reasons]
+            properties:
+              mealId: { type: integer }
+              name: { type: string }
+              kcal: { type: number }
+              proteinG: { type: number }
+              fatG: { type: number }
+              carbsG: { type: number }
+              prepTimeMin: { type: integer }
+              reasons: { type: array, minItems: 1, items: { $ref: '#/components/schemas/Reason' } }
+    ExerciseOptions:
+      type: object
+      required: [planId, itemKey, baseVersion, options]
+      properties:
+        planId: { type: string, format: uuid }
+        itemKey: { type: string, format: uuid }
+        baseVersion: { type: integer, minimum: 1 }
+        options:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [exerciseId, name, durationMin, reasons]
+            properties:
+              exerciseId: { type: integer }
+              name: { type: string }
+              durationMin: { type: integer, minimum: 1, maximum: 600 }
+              reasons: { type: array, minItems: 1, items: { $ref: '#/components/schemas/Reason' } }
+    ReplacementRequest:
+      type: object
+      additionalProperties: false
+      required: [baseVersion]
+      description: 'MEAL item: mealId. WORKOUT item: exerciseId and durationMin.'
+      properties:
+        baseVersion: { type: integer, minimum: 1 }
+        mealId: { type: integer, minimum: 1 }
+        exerciseId: { type: integer, minimum: 1 }
+        durationMin: { type: integer, minimum: 1, maximum: 600 }
+    ItemStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, enum: [COMPLETED, SKIPPED, MISSED], description: 'MEAL: COMPLETED/SKIPPED/MISSED. WORKOUT: MISSED (other workout outcomes via activity-entries).' }
+    Deviation:
+      type: object
+      required: [deviationId, type, itemKey, kcalDifference, details, detectedAt]
+      properties:
+        deviationId: { type: string, format: uuid }
+        type: { type: string, enum: [KCAL_DIFFERENCE, ITEM_SKIPPED, ITEM_MISSED, CONSTRAINT_INFEASIBLE] }
+        itemKey: { type: [string, 'null'], format: uuid }
+        kcalDifference: { type: [number, 'null'], description: Actual minus planned kcal (KCAL_DIFFERENCE only). }
+        details: { type: [string, 'null'] }
+        detectedAt: { type: string, format: date-time }
+    ItemStatusResult:
+      type: object
+      required: [planId, item, recoveryRequired, newDeviations]
+      properties:
+        planId: { type: string, format: uuid }
+        item: { $ref: '#/components/schemas/PlanItem' }
+        recoveryRequired: { type: boolean }
+        newDeviations: { type: array, items: { $ref: '#/components/schemas/Deviation' } }
+
+    Exercise:
+      type: object
+      required: [exerciseId, name, metValue, requiredEquipment]
+      properties:
+        exerciseId: { type: integer, minimum: 1 }
+        name: { type: string }
+        metValue: { type: number, minimum: 1, maximum: 25, description: MET estimate (LEG-6). }
+        requiredEquipment: { type: array, items: { $ref: '#/components/schemas/Code' } }
+    ActivityEntryRequest:
+      type: object
+      additionalProperties: false
+      required: [date, exerciseId, status]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        exerciseId: { type: integer, minimum: 1 }
+        planItemKey: { type: [string, 'null'], format: uuid, description: Planned WORKOUT of the active version on the same date. }
+        status: { type: string, enum: [COMPLETED, SKIPPED, CHANGED] }
+        durationMin: { type: [integer, 'null'], minimum: 1, maximum: 600, description: Required for COMPLETED/CHANGED; must be null for SKIPPED. }
+      if: { properties: { status: { const: SKIPPED } } }
+      then: { properties: { durationMin: { type: 'null' } } }
+      else: { required: [durationMin], properties: { durationMin: { type: integer } } }
+    ActivityEntry:
+      type: object
+      required: [entryId, date, exerciseId, exerciseName, planItemKey, status, durationMin, createdAt]
+      properties:
+        entryId: { type: string, format: uuid }
+        date: { $ref: '#/components/schemas/LocalDate' }
+        exerciseId: { type: integer }
+        exerciseName: { type: string }
+        planItemKey: { type: [string, 'null'], format: uuid }
+        status: { type: string, enum: [COMPLETED, SKIPPED, CHANGED] }
+        durationMin: { type: [integer, 'null'] }
+        createdAt: { type: string, format: date-time }
+    ActivityEntryResult:
+      type: object
+      required: [entry, recoveryRequired]
+      properties:
+        entry: { $ref: '#/components/schemas/ActivityEntry' }
+        recoveryRequired: { type: [boolean, 'null'] }
+
+    CreateRecoveryProposalRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        baseVersion: { type: integer, minimum: 1, description: 'Optional - the version the user is looking at; if it is not the active version, 409.' }
+    RecoveryChange:
+      type: object
+      required: [changeId, changeNo, changeType, targetItemKey, before, after, reason]
+      properties:
+        changeId: { type: string, format: uuid }
+        changeNo: { type: integer, minimum: 1 }
+        changeType: { type: string, enum: [REPLACE, REMOVE, ADD] }
+        targetItemKey: { type: [string, 'null'], format: uuid, description: Replaced/removed item; null for ADD. }
+        before: { oneOf: [{ $ref: '#/components/schemas/PlanItem' }, { type: 'null' }], description: Old value (REPLACE/REMOVE). }
+        after: { oneOf: [{ $ref: '#/components/schemas/PlanItemRef' }, { type: 'null' }], description: New value (REPLACE/ADD). }
+        reason: { $ref: '#/components/schemas/Reason' }
+    RecoveryTotals:
+      type: object
+      required: [targetKcal, consumedKcal, remainingPlannedKcalBefore, remainingPlannedKcalAfter, forecastKcal]
+      properties:
+        targetKcal: { type: [number, 'null'] }
+        consumedKcal: { type: number, description: From confirmed entries only. }
+        remainingPlannedKcalBefore: { type: number, description: Remaining PLANNED meals of the base version. }
+        remainingPlannedKcalAfter: { type: number, description: Remaining meals if the proposal is accepted. }
+        forecastKcal: { type: number, description: consumedKcal + remainingPlannedKcalAfter. }
+    RecoveryProposal:
+      type: object
+      required: [proposalId, planId, baseVersion, status, createdAt, changes, totals]
+      properties:
+        proposalId: { type: string, format: uuid }
+        planId: { type: string, format: uuid }
+        baseVersion: { type: integer, minimum: 1 }
+        status: { type: string, enum: [PENDING, STALE, ACCEPTED, EDITED, REJECTED] }
+        createdAt: { type: string, format: date-time }
+        changes: { type: array, minItems: 1, items: { $ref: '#/components/schemas/RecoveryChange' } }
+        totals: { $ref: '#/components/schemas/RecoveryTotals' }
+    DecisionRequest:
+      type: object
+      additionalProperties: false
+      required: [decision, baseVersion]
+      properties:
+        decision: { type: string, enum: [ACCEPT, EDIT, REJECT], description: EDIT is BLOCKED until Q12 is decided. }
+        baseVersion: { type: integer, minimum: 1 }
+        selectedChangeIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          description: 'PROVISIONAL, EDIT only (Q12 OPEN): changes of this proposal to apply. Must be absent for ACCEPT and REJECT. Editing values of proposed items is not specified yet.'
+          items: { type: string, format: uuid }
+    DecisionResult:
+      type: object
+      required: [proposalId, decision, decidedAt, plan]
+      properties:
+        proposalId: { type: string, format: uuid }
+        decision: { type: string, enum: [ACCEPT, EDIT, REJECT] }
+        decidedAt: { type: string, format: date-time }
+        plan: { $ref: '#/components/schemas/Plan' }
+
+    DaySummary:
+      type: object
+      required: [date, plan, nutrition, activity, openItems]
+      properties:
+        date: { $ref: '#/components/schemas/LocalDate' }
+        plan: { oneOf: [{ $ref: '#/components/schemas/Plan' }, { type: 'null' }], description: Active version; null when the day has no plan. }
+        nutrition:
+          type: object
+          required: [plannedKcal, consumedKcal, consumedProteinG, consumedFatG, consumedCarbsG, targetKcal, remainingKcal]
+          properties:
+            plannedKcal: { type: number }
+            consumedKcal: { type: number }
+            consumedProteinG: { type: number }
+            consumedFatG: { type: number }
+            consumedCarbsG: { type: number }
+            targetKcal: { type: [number, 'null'] }
+            remainingKcal: { type: [number, 'null'] }
+        activity:
+          type: object
+          required: [plannedWorkoutMin, completedWorkoutMin]
+          properties:
+            plannedWorkoutMin: { type: integer, minimum: 0 }
+            completedWorkoutMin: { type: integer, minimum: 0 }
+        openItems: { type: integer, minimum: 0, description: PLANNED items of the active version. }
