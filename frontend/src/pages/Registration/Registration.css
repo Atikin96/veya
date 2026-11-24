@@ -1,0 +1,398 @@
+.registration {
+  min-height: 100vh;
+  background: #f3f6f1;
+}
+
+/* Header */
+.rg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 40px;
+  background: #fcfdfb;
+  border-bottom: 1px solid #e2e8e0;
+}
+
+.rg-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rg-logo-icon {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eaf2e9;
+  color: #286247;
+}
+
+.rg-logo-text {
+  color: #1c4a35;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.rg-signin {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #738078;
+  font-size: 11px;
+}
+
+.rg-signin-btn {
+  padding: 8px 14px;
+  border: 1px solid #e2e8e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #233a30;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rg-signin-btn:hover {
+  background: #eaf2e9;
+}
+
+/* Main */
+.rg-main {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 400px);
+  gap: 44px;
+  justify-content: center;
+  align-items: start;
+  padding: 24px 40px 40px;
+}
+
+/* Left panel */
+.rg-panel {
+  padding: 24px;
+  border-radius: 18px;
+  background: #1c4a35;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.rg-panel-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  color: #dce9af;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.rg-panel h2 {
+  margin: 0 0 18px;
+  font-size: 27px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.rg-panel-text {
+  margin: 0 0 20px;
+  color: #d3e2d8;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.rg-panel img {
+  display: block;
+  width: 100%;
+  height: 230px;
+  margin-bottom: 20px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.rg-feature {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: #d3e2d8;
+}
+
+.rg-feature svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.rg-feature div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rg-feature strong {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.rg-feature span {
+  font-size: 9px;
+}
+
+/* Form */
+.rg-form {
+  min-width: 0;
+}
+
+.rg-steps {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.rg-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #738078;
+  font-size: 10px;
+}
+
+.rg-step span {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e4ebe2;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.rg-step.active {
+  color: #233a30;
+  font-weight: 600;
+}
+
+.rg-step.active span {
+  background: #286247;
+  color: #fff;
+}
+
+.rg-form h1 {
+  margin: 0 0 6px;
+  color: #233a30;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.rg-subtitle {
+  margin: 0 0 18px;
+  color: #738078;
+  font-size: 11px;
+}
+
+.rg-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: #233a30;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.rg-form input[type="text"],
+.rg-form input[type="email"],
+.rg-form input[type="password"],
+.rg-form input:not([type]) {
+  width: 100%;
+  height: 40px;
+  margin-bottom: 14px;
+  padding: 0 12px;
+  border: 1px solid #e2e8e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #233a30;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.rg-form input:focus {
+  outline: none;
+  border-color: #286247;
+}
+
+.rg-passwords {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.rg-input-wrap {
+  position: relative;
+}
+
+.rg-eye {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #738078;
+  cursor: pointer;
+}
+
+.rg-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  color: #738078;
+  font-size: 9px;
+}
+
+.rg-hint svg {
+  color: #286247;
+}
+
+/* Checkboxes */
+.rg-checks {
+  padding-top: 16px;
+  border-top: 1px solid #e2e8e0;
+}
+
+.rg-form .rg-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #233a30;
+  font-size: 10px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.rg-check input {
+  width: 14px;
+  height: 14px;
+  margin: 1px 0 0;
+  flex-shrink: 0;
+  accent-color: #286247;
+}
+
+.rg-links {
+  display: flex;
+  gap: 20px;
+  margin: 0 0 16px 24px;
+}
+
+.rg-links a,
+.rg-consent a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #286247;
+  font-size: 9px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rg-links a:hover,
+.rg-consent a:hover {
+  color: #194831;
+}
+
+.rg-consent {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #e8f0e6;
+}
+
+.rg-consent p {
+  margin: 0 0 10px 24px;
+  color: #738078;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.rg-consent a {
+  margin-left: 24px;
+}
+
+/* Bottom */
+.rg-bottom {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+  color: #738078;
+  font-size: 9px;
+}
+
+.rg-create {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #286247;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rg-create:hover {
+  background: #194831;
+}
+
+.rg-disclaimer {
+  margin: 0;
+  color: #738078;
+  font-size: 8px;
+}
+.rg-error {
+  margin: 5px 0 10px;
+  color: #ae5048;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rg-form input[aria-invalid="true"] {
+  border-color: #ae5048;
+}
+@media (max-width: 900px) {
+  .rg-main {
+    grid-template-columns: minmax(0, 480px);
+    padding: 20px;
+  }
+
+  .rg-header {
+    padding: 14px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rg-signin span {
+    display: none;
+  }
+
+  .rg-passwords {
+    grid-template-columns: 1fr;
+  }
+
+  .rg-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rg-panel h2 {
+    font-size: 22px;
+  }
+}

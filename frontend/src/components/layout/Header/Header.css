@@ -1,0 +1,144 @@
+.header {
+  width: 100%;
+  min-height: 76px;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  background-color: #FCFDFB;
+  border-bottom: 1px solid #E2E8E0;
+}
+
+.header-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #738078;
+}
+.header-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.header-breadcrumb a:hover {
+  color: #286247;
+}
+.breadcrumb-divider {
+  color: #BFA67E;
+}
+
+.current-page {
+  color: #233A30;
+  font-weight: 600;
+}
+
+.notification-button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E2E8E0;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  color: #286247;
+  cursor: pointer;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.language-button {
+  min-width: 68px;
+  height: 40px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #E2E8E0;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  color: #286247;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.language-button:hover {
+  background-color: #EAF2E9;
+  border-color: #286247;
+}
+.btns-notification-language{
+    display: flex;
+    gap: 20px;
+}
+.signout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #e2e8e0;
+  border-radius: 9px;
+  background: #fff;
+  color: #233a30;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.signout-button:hover {
+  background: #eaf2e9;
+  color: #286247;
+}
+@media (max-width: 768px) {
+  .header {
+    min-height: 64px;
+    padding: 0 20px;
+  }
+
+  .header-breadcrumb {
+    font-size: 12px;
+  }
+}
+@media (max-width: 480px) {
+  .header {
+    min-height: 56px;
+    padding: 0 16px;
+  }
+
+  .header-breadcrumb {
+    gap: 7px;
+    font-size: 11px;
+  }
+
+  .notification-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notification-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  .header-actions {
+  gap: 8px;
+}
+
+.language-button {
+  min-width: 60px;
+  height: 36px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+.signout-button span {
+    display: none;
+  }
+}

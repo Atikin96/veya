@@ -1,0 +1,542 @@
+.workouts {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+/* Heading */
+.wk-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.wk-heading p {
+  margin: 0 0 10px;
+  color: #738078;
+  font-size: 12px;
+}
+
+.wk-heading h1 {
+  margin: 0;
+  color: #233a30;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.wk-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #286247;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wk-add:hover {
+  background: #194831;
+}
+
+/* Filters */
+.wk-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wk-filters button {
+  padding: 8px 16px;
+  border: 1px solid #e2e8e0;
+  border-radius: 20px;
+  background: #fff;
+  color: #738078;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.wk-filters button.active {
+  background: #286247;
+  border-color: #286247;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Layout */
+.wk-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.wk-card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e2e8e0;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+.wk-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wk-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: #eaf2e9;
+  color: #286247;
+}
+
+.wk-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wk-pill.planned {
+  background: #f1f4f0;
+  color: #738078;
+}
+
+.wk-pill.completed {
+  background: #eaf2e9;
+  color: #286247;
+}
+
+/* Workout card */
+.wk-workout-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wk-workout-top h2 {
+  margin: 0 0 4px;
+  color: #233a30;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.wk-workout-top span {
+  color: #738078;
+  font-size: 11px;
+}
+
+.wk-workout-top .wk-pill {
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.wk-description {
+  margin: 18px 0 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf1eb;
+  color: #738078;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.wk-exercise {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  color: #738078;
+}
+
+.wk-circle {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1.5px solid #738078;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.wk-exercise-name {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wk-exercise-name strong {
+  color: #233a30;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.wk-exercise-name span {
+  font-size: 10px;
+}
+
+.wk-exercise b {
+  color: #233a30;
+  font-size: 12px;
+}
+
+.wk-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 18px;
+  border-top: 1px solid #edf1eb;
+}
+
+.wk-primary,
+.wk-outline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wk-primary {
+  border: none;
+  background: #286247;
+  color: #fff;
+}
+
+.wk-primary:hover {
+  background: #194831;
+}
+
+.wk-outline {
+  border: 1px solid #e2e8e0;
+  background: #fff;
+  color: #233a30;
+}
+
+.wk-outline:hover {
+  background: #eaf2e9;
+}
+
+.wk-skip {
+  padding: 0 10px;
+  border: none;
+  background: none;
+  color: #233a30;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Completed card */
+.wk-done {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  color: #286247;
+}
+
+.wk-done div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wk-done strong {
+  color: #233a30;
+  font-size: 13px;
+}
+
+.wk-done div span {
+  color: #738078;
+  font-size: 11px;
+}
+
+.wk-done .wk-pill {
+  margin-left: auto;
+}
+
+/* Right side */
+.wk-change h2 {
+  margin: 0 0 16px;
+  color: #233a30;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wk-selects {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.wk-selects label,
+.wk-catalog-filters label {
+  display: block;
+  margin-bottom: 6px;
+  color: #233a30;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.wk-selects select,
+.wk-catalog-filters select,
+.wk-catalog-filters input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e2e8e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #233a30;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.wk-change img {
+  width: 100%;
+  height: 150px;
+  margin-bottom: 14px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.wk-change-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.wk-change-title h3 {
+  margin: 0;
+  color: #233a30;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wk-text {
+  margin: 0 0 14px;
+  color: #738078;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.wk-suggestion {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #fbf0d9;
+  color: #946d2b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.wk-change .wk-primary {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.wk-small {
+  margin: 0;
+  color: #738078;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* Catalog */
+.wk-catalog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.wk-catalog-head h2 {
+  margin: 0;
+  color: #233a30;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.wk-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #286247;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.wk-link:hover {
+  color: #194831;
+}
+
+.wk-catalog-filters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.wk-input-wrap {
+  position: relative;
+}
+
+.wk-input-wrap select {
+  appearance: none;
+  padding-right: 30px;
+}
+
+.wk-input-wrap svg {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  color: #738078;
+  pointer-events: none;
+}
+
+.wk-exercises {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.wk-ex-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.wk-ex-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wk-ex-top div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wk-ex-top strong {
+  color: #233a30;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wk-ex-top span {
+  color: #738078;
+  font-size: 10px;
+}
+
+.wk-ex-card .wk-link {
+  align-self: flex-start;
+}
+
+/* Recent */
+.wk-recent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: #738078;
+  font-size: 11px;
+}
+
+.wk-recent-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.wk-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #e4ebe2;
+  color: #4a5a50;
+  font-size: 10px;
+}
+
+.wk-footer {
+  margin: 0;
+  color: #738078;
+  font-size: 10px;
+}
+
+@media (max-width: 1100px) {
+  .wk-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .wk-catalog-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .wk-exercises {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .wk-heading h1 {
+    font-size: 26px;
+  }
+
+  .wk-exercises {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .wk-heading {
+    flex-direction: column;
+  }
+
+  .wk-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .wk-workout-top {
+    flex-wrap: wrap;
+  }
+
+  .wk-buttons {
+    flex-wrap: wrap;
+  }
+
+  .wk-catalog-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .wk-recent-chips {
+    margin-left: 0;
+  }
+}
