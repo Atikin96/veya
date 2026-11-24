@@ -1,0 +1,7 @@
+# Build context of backend/Dockerfile is the repository root: send only what the image needs.
+**
+!backend/.mvn/**
+!backend/mvnw
+!backend/pom.xml
+!backend/src/main/**
+!docs/api/openapi.yaml

@@ -1,11 +1,12 @@
 # VEYA REST API — endpoint catalogue (MVP contract draft)
 
 > **Generated from [`openapi.yaml`](openapi.yaml) by `tools/build_docs.py` — do not edit by hand.**
-> Status 2026-11-22: only the actuator health endpoints are **IMPLEMENTED** (verified by `HealthEndpointTests`).
-> All `/api/v1` operations are **PLANNED**: the contract is documented, but no controller exists yet, so the
-> requests cannot succeed against the running backend.
+> Status 2026-11-22: **IMPLEMENTED** operations are served by the running backend and verified over real HTTP by
+> the API integration tests (`backend/src/test/java/com/veya/api`, responses validated against this contract).
+> **PARTIAL** operations work with the limitation stated in their notes. **PLANNED** operations are documented only;
+> no controller exists yet, so those requests cannot succeed against the running backend.
 
-Operations: **45** — IMPLEMENTED 3, PLANNED 42, PARTIAL 0, BLOCKED 0 (fully blocked operations). One operation variant is blocked: **EDIT** of a recovery proposal (Q12). One function without endpoint is blocked: adding items to an existing plan (AQ-3).
+Operations: **45** — IMPLEMENTED 44, PLANNED 0, PARTIAL 1, BLOCKED 0 (fully blocked operations). One operation variant is blocked: **EDIT** of a recovery proposal (Q12). One function without endpoint is blocked: adding items to an existing plan (AQ-3).
 
 Sources: BA `docs/BA_Malafei_Mikita.docx` (Table 2.8 API contract, Appendix A stories, UC-01/UC-02, Fig. B.4/B.5/B.10,
 NFR-01..18, LEG-1..9), agreed decisions [`docs/ba-open-questions.md`](../ba-open-questions.md), database
@@ -36,48 +37,48 @@ comes from the BA or is **PROPOSED** (needs agreement, see [Open questions](#ope
 | 1 | system | [`GET /actuator/health`](#get-actuatorhealth) | `getHealth` | US-32 | public | IMPLEMENTED | Actuator |
 | 2 | system | [`GET /actuator/health/liveness`](#get-actuatorhealthliveness) | `getLiveness` | US-32 | public | IMPLEMENTED | Actuator |
 | 3 | system | [`GET /actuator/health/readiness`](#get-actuatorhealthreadiness) | `getReadiness` | US-32 | public | IMPLEMENTED | Actuator |
-| 4 | system | [`GET /v3/api-docs`](#get-v3api-docs) | `getApiDocs` | US-29 | public | PLANNED | PROPOSED |
-| 5 | system | [`GET /api/v1/reference-data`](#get-apiv1reference-data) | `getReferenceData` | US-02, US-03, US-06 | JWT | PLANNED | PROPOSED |
-| 6 | identity | [`POST /api/v1/auth/register`](#post-apiv1authregister) | `register` | US-01 | public | PLANNED | PROPOSED |
-| 7 | identity | [`POST /api/v1/auth/login`](#post-apiv1authlogin) | `login` | US-01, US-30 | public | PLANNED | PROPOSED |
-| 8 | identity | [`GET /api/v1/me`](#get-apiv1me) | `getMe` | US-01, US-30 | JWT | PLANNED | PROPOSED |
-| 9 | identity | [`DELETE /api/v1/me`](#delete-apiv1me) | `deleteMyAccount` | US-04 | JWT | PLANNED | PROPOSED |
-| 10 | identity | [`GET /api/v1/me/export`](#get-apiv1meexport) | `exportMyData` | US-04 | JWT | PLANNED | PROPOSED |
-| 11 | identity | [`GET /api/v1/consent-documents`](#get-apiv1consent-documents) | `listConsentDocuments` | US-01 | public | PLANNED | PROPOSED |
-| 12 | identity | [`GET /api/v1/me/consents`](#get-apiv1meconsents) | `listMyConsents` | US-01 | JWT | PLANNED | PROPOSED |
-| 13 | identity | [`POST /api/v1/me/consents`](#post-apiv1meconsents) | `grantConsent` | US-01 | JWT | PLANNED | PROPOSED |
-| 14 | identity | [`POST /api/v1/me/consents/{consentId}/withdrawal`](#post-apiv1meconsentsconsentidwithdrawal) | `withdrawConsent` | US-01 | JWT | PLANNED | PROPOSED |
-| 15 | profile | [`GET /api/v1/me/profile`](#get-apiv1meprofile) | `getMyProfile` | US-02 | JWT | PLANNED | PROPOSED |
-| 16 | profile | [`PUT /api/v1/me/profile`](#put-apiv1meprofile) | `saveMyProfile` | US-02, US-03 | JWT | PLANNED | PROPOSED |
-| 17 | profile | [`GET /api/v1/constraints/{date}`](#get-apiv1constraintsdate) | `getDailyConstraints` | US-03 | JWT | PLANNED | PROPOSED |
-| 18 | profile | [`PUT /api/v1/constraints/{date}`](#put-apiv1constraintsdate) | `saveDailyConstraints` | US-03, US-15 | JWT | PLANNED | PROPOSED |
-| 19 | nutrition | [`GET /api/v1/foods`](#get-apiv1foods) | `searchFoods` | US-05, US-31 | JWT | PLANNED | PROPOSED |
-| 20 | nutrition | [`GET /api/v1/meals`](#get-apiv1meals) | `listMeals` | US-09 | JWT | PLANNED | PROPOSED |
-| 21 | nutrition | [`GET /api/v1/food-entries`](#get-apiv1food-entries) | `listFoodEntries` | US-06, US-07 | JWT | PLANNED | PROPOSED |
-| 22 | nutrition | [`POST /api/v1/food-entries`](#post-apiv1food-entries) | `createFoodEntry` | US-06, US-15 | JWT | PLANNED | PROPOSED |
-| 23 | nutrition | [`PATCH /api/v1/food-entries/{entryId}`](#patch-apiv1food-entriesentryid) | `updateFoodEntry` | US-06, US-15 | JWT | PLANNED | PROPOSED |
-| 24 | nutrition | [`DELETE /api/v1/food-entries/{entryId}`](#delete-apiv1food-entriesentryid) | `deleteFoodEntry` | US-06 | JWT | PLANNED | PROPOSED |
-| 25 | nutrition | [`GET /api/v1/food-entries/recent`](#get-apiv1food-entriesrecent) | `listRecentFoodEntries` | US-08 | JWT | PLANNED | PROPOSED |
-| 26 | nutrition | [`GET /api/v1/saved-meals`](#get-apiv1saved-meals) | `listSavedMeals` | US-08 | JWT | PLANNED | PROPOSED |
-| 27 | nutrition | [`POST /api/v1/saved-meals`](#post-apiv1saved-meals) | `createSavedMeal` | US-08 | JWT | PLANNED | PROPOSED |
-| 28 | nutrition | [`POST /api/v1/saved-meals/{savedMealId}/entries`](#post-apiv1saved-mealssavedmealidentries) | `logSavedMeal` | US-08 | JWT | PLANNED | PROPOSED |
-| 29 | nutrition | [`GET /api/v1/days/{date}/nutrition`](#get-apiv1daysdatenutrition) | `getNutritionSummary` | US-07 | JWT | PLANNED | PROPOSED |
-| 30 | planning | [`POST /api/v1/meal-plan-suggestions`](#post-apiv1meal-plan-suggestions) | `suggestMealPlan` | US-09 | JWT | PLANNED | PROPOSED |
-| 31 | planning | [`GET /api/v1/plans`](#get-apiv1plans) | `getPlanByDate` | US-09, US-12, US-20 | JWT | PLANNED | PROPOSED |
-| 32 | planning | [`POST /api/v1/plans`](#post-apiv1plans) | `createPlan` | US-09, US-12 | JWT | PLANNED | PROPOSED |
-| 33 | planning | [`GET /api/v1/plans/{planId}`](#get-apiv1plansplanid) | `getPlan` | US-09, US-12, US-18, US-20 | JWT | PLANNED | PROPOSED |
-| 34 | planning | [`POST /api/v1/meal-options`](#post-apiv1meal-options) | `getMealOptions` | US-10 | JWT | PLANNED | BA |
-| 35 | planning | [`POST /api/v1/exercise-options`](#post-apiv1exercise-options) | `getExerciseOptions` | US-14 | JWT | PLANNED | PROPOSED |
-| 36 | planning | [`POST /api/v1/plans/{planId}/items/{itemKey}/replacement`](#post-apiv1plansplaniditemsitemkeyreplacement) | `replacePlanItem` | US-10, US-14 | JWT | PLANNED | PROPOSED |
-| 37 | planning | [`POST /api/v1/plans/{planId}/items/{itemKey}/status`](#post-apiv1plansplaniditemsitemkeystatus) | `recordPlanItemStatus` | US-13, US-15 | JWT | PLANNED | PROPOSED |
-| 38 | planning | [`GET /api/v1/plans/{planId}/deviations`](#get-apiv1plansplaniddeviations) | `listOpenDeviations` | US-15 | JWT | PLANNED | PROPOSED |
-| 39 | activity | [`GET /api/v1/exercises`](#get-apiv1exercises) | `listExercises` | US-12 | JWT | PLANNED | PROPOSED |
-| 40 | activity | [`GET /api/v1/activity-entries`](#get-apiv1activity-entries) | `listActivityEntries` | US-13, US-20 | JWT | PLANNED | PROPOSED |
-| 41 | activity | [`POST /api/v1/activity-entries`](#post-apiv1activity-entries) | `createActivityEntry` | US-13, US-15 | JWT | PLANNED | PROPOSED |
-| 42 | recovery | [`POST /api/v1/plans/{planId}/recovery-proposals`](#post-apiv1plansplanidrecovery-proposals) | `createRecoveryProposal` | US-16, US-17, US-19 | JWT | PLANNED | BA |
-| 43 | recovery | [`GET /api/v1/recovery-proposals/{proposalId}`](#get-apiv1recovery-proposalsproposalid) | `getRecoveryProposal` | US-16, US-17, US-18 | JWT | PLANNED | PROPOSED |
-| 44 | recovery | [`POST /api/v1/recovery-proposals/{proposalId}/decision`](#post-apiv1recovery-proposalsproposaliddecision) | `decideRecoveryProposal` | US-18 | JWT | PLANNED (EDIT BLOCKED) | BA |
-| 45 | history | [`GET /api/v1/days/{date}/summary`](#get-apiv1daysdatesummary) | `getDaySummary` | US-20, US-07 | JWT | PLANNED | BA |
+| 4 | system | [`GET /v3/api-docs`](#get-v3api-docs) | `getApiDocs` | US-29 | public | IMPLEMENTED | PROPOSED |
+| 5 | system | [`GET /api/v1/reference-data`](#get-apiv1reference-data) | `getReferenceData` | US-02, US-03, US-06 | JWT | IMPLEMENTED | PROPOSED |
+| 6 | identity | [`POST /api/v1/auth/register`](#post-apiv1authregister) | `register` | US-01 | public | IMPLEMENTED | PROPOSED |
+| 7 | identity | [`POST /api/v1/auth/login`](#post-apiv1authlogin) | `login` | US-01, US-30 | public | IMPLEMENTED | PROPOSED |
+| 8 | identity | [`GET /api/v1/me`](#get-apiv1me) | `getMe` | US-01, US-30 | JWT | IMPLEMENTED | PROPOSED |
+| 9 | identity | [`DELETE /api/v1/me`](#delete-apiv1me) | `deleteMyAccount` | US-04 | JWT | IMPLEMENTED | PROPOSED |
+| 10 | identity | [`GET /api/v1/me/export`](#get-apiv1meexport) | `exportMyData` | US-04 | JWT | IMPLEMENTED | PROPOSED |
+| 11 | identity | [`GET /api/v1/consent-documents`](#get-apiv1consent-documents) | `listConsentDocuments` | US-01 | public | IMPLEMENTED | PROPOSED |
+| 12 | identity | [`GET /api/v1/me/consents`](#get-apiv1meconsents) | `listMyConsents` | US-01 | JWT | IMPLEMENTED | PROPOSED |
+| 13 | identity | [`POST /api/v1/me/consents`](#post-apiv1meconsents) | `grantConsent` | US-01 | JWT | IMPLEMENTED | PROPOSED |
+| 14 | identity | [`POST /api/v1/me/consents/{consentId}/withdrawal`](#post-apiv1meconsentsconsentidwithdrawal) | `withdrawConsent` | US-01 | JWT | IMPLEMENTED | PROPOSED |
+| 15 | profile | [`GET /api/v1/me/profile`](#get-apiv1meprofile) | `getMyProfile` | US-02 | JWT | IMPLEMENTED | PROPOSED |
+| 16 | profile | [`PUT /api/v1/me/profile`](#put-apiv1meprofile) | `saveMyProfile` | US-02, US-03 | JWT | IMPLEMENTED | PROPOSED |
+| 17 | profile | [`GET /api/v1/constraints/{date}`](#get-apiv1constraintsdate) | `getDailyConstraints` | US-03 | JWT | IMPLEMENTED | PROPOSED |
+| 18 | profile | [`PUT /api/v1/constraints/{date}`](#put-apiv1constraintsdate) | `saveDailyConstraints` | US-03, US-15 | JWT | IMPLEMENTED | PROPOSED |
+| 19 | nutrition | [`GET /api/v1/foods`](#get-apiv1foods) | `searchFoods` | US-05, US-31 | JWT | IMPLEMENTED | PROPOSED |
+| 20 | nutrition | [`GET /api/v1/meals`](#get-apiv1meals) | `listMeals` | US-09 | JWT | IMPLEMENTED | PROPOSED |
+| 21 | nutrition | [`GET /api/v1/food-entries`](#get-apiv1food-entries) | `listFoodEntries` | US-06, US-07 | JWT | IMPLEMENTED | PROPOSED |
+| 22 | nutrition | [`POST /api/v1/food-entries`](#post-apiv1food-entries) | `createFoodEntry` | US-06, US-15 | JWT | IMPLEMENTED | PROPOSED |
+| 23 | nutrition | [`PATCH /api/v1/food-entries/{entryId}`](#patch-apiv1food-entriesentryid) | `updateFoodEntry` | US-06, US-15 | JWT | IMPLEMENTED | PROPOSED |
+| 24 | nutrition | [`DELETE /api/v1/food-entries/{entryId}`](#delete-apiv1food-entriesentryid) | `deleteFoodEntry` | US-06 | JWT | IMPLEMENTED | PROPOSED |
+| 25 | nutrition | [`GET /api/v1/food-entries/recent`](#get-apiv1food-entriesrecent) | `listRecentFoodEntries` | US-08 | JWT | IMPLEMENTED | PROPOSED |
+| 26 | nutrition | [`GET /api/v1/saved-meals`](#get-apiv1saved-meals) | `listSavedMeals` | US-08 | JWT | IMPLEMENTED | PROPOSED |
+| 27 | nutrition | [`POST /api/v1/saved-meals`](#post-apiv1saved-meals) | `createSavedMeal` | US-08 | JWT | IMPLEMENTED | PROPOSED |
+| 28 | nutrition | [`POST /api/v1/saved-meals/{savedMealId}/entries`](#post-apiv1saved-mealssavedmealidentries) | `logSavedMeal` | US-08 | JWT | IMPLEMENTED | PROPOSED |
+| 29 | nutrition | [`GET /api/v1/days/{date}/nutrition`](#get-apiv1daysdatenutrition) | `getNutritionSummary` | US-07 | JWT | IMPLEMENTED | PROPOSED |
+| 30 | planning | [`POST /api/v1/meal-plan-suggestions`](#post-apiv1meal-plan-suggestions) | `suggestMealPlan` | US-09 | JWT | IMPLEMENTED | PROPOSED |
+| 31 | planning | [`GET /api/v1/plans`](#get-apiv1plans) | `getPlanByDate` | US-09, US-12, US-20 | JWT | IMPLEMENTED | PROPOSED |
+| 32 | planning | [`POST /api/v1/plans`](#post-apiv1plans) | `createPlan` | US-09, US-12 | JWT | IMPLEMENTED | PROPOSED |
+| 33 | planning | [`GET /api/v1/plans/{planId}`](#get-apiv1plansplanid) | `getPlan` | US-09, US-12, US-18, US-20 | JWT | IMPLEMENTED | PROPOSED |
+| 34 | planning | [`POST /api/v1/meal-options`](#post-apiv1meal-options) | `getMealOptions` | US-10 | JWT | IMPLEMENTED | BA |
+| 35 | planning | [`POST /api/v1/exercise-options`](#post-apiv1exercise-options) | `getExerciseOptions` | US-14 | JWT | IMPLEMENTED | PROPOSED |
+| 36 | planning | [`POST /api/v1/plans/{planId}/items/{itemKey}/replacement`](#post-apiv1plansplaniditemsitemkeyreplacement) | `replacePlanItem` | US-10, US-14 | JWT | IMPLEMENTED | PROPOSED |
+| 37 | planning | [`POST /api/v1/plans/{planId}/items/{itemKey}/status`](#post-apiv1plansplaniditemsitemkeystatus) | `recordPlanItemStatus` | US-13, US-15 | JWT | IMPLEMENTED | PROPOSED |
+| 38 | planning | [`GET /api/v1/plans/{planId}/deviations`](#get-apiv1plansplaniddeviations) | `listOpenDeviations` | US-15 | JWT | IMPLEMENTED | PROPOSED |
+| 39 | activity | [`GET /api/v1/exercises`](#get-apiv1exercises) | `listExercises` | US-12 | JWT | IMPLEMENTED | PROPOSED |
+| 40 | activity | [`GET /api/v1/activity-entries`](#get-apiv1activity-entries) | `listActivityEntries` | US-13, US-20 | JWT | IMPLEMENTED | PROPOSED |
+| 41 | activity | [`POST /api/v1/activity-entries`](#post-apiv1activity-entries) | `createActivityEntry` | US-13, US-15 | JWT | IMPLEMENTED | PROPOSED |
+| 42 | recovery | [`POST /api/v1/plans/{planId}/recovery-proposals`](#post-apiv1plansplanidrecovery-proposals) | `createRecoveryProposal` | US-16, US-17, US-19 | JWT | IMPLEMENTED | BA |
+| 43 | recovery | [`GET /api/v1/recovery-proposals/{proposalId}`](#get-apiv1recovery-proposalsproposalid) | `getRecoveryProposal` | US-16, US-17, US-18 | JWT | IMPLEMENTED | PROPOSED |
+| 44 | recovery | [`POST /api/v1/recovery-proposals/{proposalId}/decision`](#post-apiv1recovery-proposalsproposaliddecision) | `decideRecoveryProposal` | US-18 | JWT | PARTIAL (EDIT BLOCKED) | BA |
+| 45 | history | [`GET /api/v1/days/{date}/summary`](#get-apiv1daysdatesummary) | `getDaySummary` | US-20, US-07 | JWT | IMPLEMENTED | BA |
 
 ## Traceability - 27 Must user stories
 
@@ -147,6 +148,8 @@ backend implementation.
 | AQ-10 | Deleting a food entry | PROPOSED as part of "log and correct" (US-06); the BA does not mention deletion explicitly. |
 | AQ-11 | Recovery requested when not required | Contract: 409 `RECOVERY_NOT_REQUIRED` (state conflict). The database raises `VY400` for this case; the API maps it. |
 | AQ-12 | Meal plan: suggestion vs. save | PROPOSED two steps for US-09: `POST /api/v1/meal-plan-suggestions` (nothing saved) and `POST /api/v1/plans` (explicit save, version 1), so no plan is stored without the user's confirmation. |
+| AQ-13 | Rule for "a constraint makes a future item infeasible" (US-15 rule 3) | IMPLEMENTED as PROPOSED, needs approval: an item still PLANNED in the active version is infeasible if a MEAL contains an ingredient excluded for the day, a MEAL needs more preparation minutes or a WORKOUT more minutes than `availableTimeMin`, or a WORKOUT needs equipment missing from `availableEquipment`. `availableIngredients` is stored but not used for infeasibility (the BA does not say whether a meal must consist only of available ingredients). |
+| AQ-14 | Acceptable target range of a suggested menu (US-09) | IMPLEMENTED as PROPOSED, needs approval: a suggested menu is accepted only if its energy is within +/- `veya.planning.target-tolerance-pct` (default 20 %) of the profile target; otherwise 422 NO_FEASIBLE_MEAL_PLAN with a NUTRITION_TARGET blocking constraint. Macros are reported, not constrained. |
 
 ## Error codes
 
@@ -284,15 +287,15 @@ Response 200
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `shared` |
 | BA stories | US-29 |
 | Acceptance criteria | US-29: given a published build, when contract docs are generated, then every client-used method specifies path, auth, schemas, success and main error responses in OpenAPI. |
-| Contract source | PROPOSED (springdoc default path) |
+| Contract source | PROPOSED (springdoc default path; served from this file) |
 | Authentication | Public |
 | Authorization / ownership | Public in development; may be disabled in production (PROPOSED). |
 
-Machine-readable contract generated by the backend (springdoc or equivalent). Until implemented, this file (`docs/api/openapi.yaml`) is the contract.
+This contract (`docs/api/openapi.yaml`, packaged into the backend at build time) served as JSON. Nothing is generated from the code; API tests check that the implemented controllers match it.
 
 **Responses**
 
@@ -318,7 +321,7 @@ Response 200
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `shared` |
 | BA stories | US-02, US-03, US-06 |
 | Acceptance criteria | Supports US-02 (goal), US-03 (exclusions, equipment), US-06 (meal slot) forms with valid codes. |
@@ -424,7 +427,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-01 |
 | Acceptance criteria | US-01: given valid registration data, when submitted, then the account is created with a securely hashed password. |
@@ -534,7 +537,7 @@ Response 409
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-01, US-30 |
 | Acceptance criteria | US-01: invalid credentials return 401 without disclosing the account state. |
@@ -626,7 +629,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-01, US-30 |
 | Acceptance criteria | US-30: missing/invalid token returns 401 without disclosing personal data. |
@@ -672,7 +675,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-04 |
 | Acceptance criteria | US-04: given explicit confirmation, when deletion completes, then associated personal records are deleted under the retention policy and the previous session cannot access them. |
@@ -731,7 +734,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-04 |
 | Acceptance criteria | LEG-4: support access, correction, export and deletion (agreed decision Q6: minimal JSON export). This is not US-36 (CSV, Could). |
@@ -801,7 +804,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-01 |
 | Acceptance criteria | LEG-2: display a clear privacy notice; obtain explicit, separately recorded and versioned consent. |
@@ -844,7 +847,7 @@ Response 200
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-01 |
 | Acceptance criteria | LEG-2 / Q7: separate consent record with version and time. |
@@ -901,7 +904,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-01 |
 | Acceptance criteria | LEG-2: explicit, separately recorded and versioned consent. |
@@ -1013,7 +1016,7 @@ Response 409
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `identity` |
 | BA stories | US-01 |
 | Acceptance criteria | LEG-2 consent; GDPR withdrawal. Database allows exactly one withdrawal per record. |
@@ -1113,7 +1116,7 @@ Response 409
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `profile` |
 | BA stories | US-02 |
 | Acceptance criteria | US-02: given authenticated, valid values, when saved, then the profile appears on subsequent requests. |
@@ -1177,7 +1180,7 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `profile` |
 | BA stories | US-02, US-03 |
 | Acceptance criteria | US-02: invalid ranges return a field error and do not change stored data. US-03: exclusions are mandatory conditions for meal, activity and recovery planning. |
@@ -1291,7 +1294,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `profile` |
 | BA stories | US-03 |
 | Acceptance criteria | US-03: given valid daily constraints, when saved, then they are stored and treated as mandatory conditions. |
@@ -1368,14 +1371,15 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `profile` |
 | BA stories | US-03, US-15 |
 | Acceptance criteria | US-03 (stored, mandatory conditions); US-15: changed time/ingredients/equipment that make a future slot infeasible set recoveryRequired. |
 | Contract source | PROPOSED |
 | Authentication | JWT bearer token |
 | Authorization / ownership | Authenticated user; own constraints only. |
-| Pagination / idempotency / notes | Idempotent (PUT replaces the day's constraints). |
+| Pagination / idempotency / notes | Idempotent (PUT replaces the day's constraints; a deviation is recorded once per item). Infeasibility rule implemented as PROPOSED in AQ-13 (needs approval). |
+| Open questions | AQ-13 rule for infeasible future items |
 
 Saves available time, equipment, available ingredients and temporary exclusions (Q3, Q5). If the change
 makes a remaining planned item infeasible, the backend records a `CONSTRAINT_INFEASIBLE` deviation and the
@@ -1496,14 +1500,14 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-05, US-31 |
 | Acceptance criteria | US-05: given a reachable provider, when the user searches, then normalized foods show calories, macros and source; timeout produces a documented error and manual-input option. US-31: stable error code and safe retry/manual route. |
 | Contract source | PROPOSED |
 | Authentication | JWT bearer token |
 | Authorization / ownership | Authenticated user; catalogue data is not personal. |
-| Pagination / idempotency / notes | Sorted by relevance (exact prefix first, then name). `limit` 1-50, default 20; no pagination (bounded result). |
+| Pagination / idempotency / notes | Provider: Open Food Facts adapter (2 s timeout), disabled by default - enable with VEYA_FOOD_PROVIDER_ENABLED=true (AQ-7: provider choice open). Provider products are cached in the local catalogue (source PROVIDER, attribution set). Fallback as described above, verified against a stub provider in the tests; without a configured provider the result is local only with providerStatus UNAVAILABLE. Sorted by relevance (names starting with the text first, then name). `limit` 1-50, default 20; no pagination (bounded result). |
 | Open questions | AQ-7 provider fallback behaviour |
 
 Case-insensitive substring search over the local catalogue and the external food provider, normalized to
@@ -1615,7 +1619,7 @@ Response 504
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-09 |
 | Acceptance criteria | US-09: the proposed menu excludes prohibited items. |
@@ -1717,7 +1721,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-06, US-07 |
 | Acceptance criteria | US-06: confirmed entries are persisted unchanged. |
@@ -1803,7 +1807,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-06, US-15 |
 | Acceptance criteria | US-06: given valid confirmed food values, when added, then the entry is persisted unchanged; invalid values are rejected without affecting totals. |
@@ -1966,7 +1970,7 @@ Response 409
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-06, US-15 |
 | Acceptance criteria | US-06: given valid confirmed food values, when edited, then the entry is persisted unchanged; invalid values are rejected without affecting totals. |
@@ -2104,7 +2108,7 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-06 |
 | Acceptance criteria | US-06: log and correct food; invalid values are rejected without affecting totals. |
@@ -2175,7 +2179,7 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-08 |
 | Acceptance criteria | US-08: given an existing saved/recent item, when selected, then a new entry is created within at most three user actions without altering its original template. |
@@ -2261,7 +2265,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-08 |
 | Acceptance criteria | US-08: reuse saved or recent meals. |
@@ -2336,7 +2340,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-08 |
 | Acceptance criteria | US-08: saved meals can be reused without altering the original template. |
@@ -2478,7 +2482,7 @@ Response 409
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-08 |
 | Acceptance criteria | US-08: a new entry is created within at most three user actions without altering its original template. |
@@ -2629,7 +2633,7 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `nutrition` |
 | BA stories | US-07 |
 | Acceptance criteria | US-07: given saved records and a daily goal, when the summary is opened, then calories and macros match persisted confirmed entries and remaining targets. |
@@ -2721,14 +2725,15 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `planning` |
 | BA stories | US-09 |
 | Acceptance criteria | US-09: given available candidate meals and goal/constraints, when requested, then the proposed menu excludes prohibited items and meets configured acceptable target ranges. |
 | Contract source | PROPOSED |
 | Authentication | JWT bearer token |
 | Authorization / ownership | Authenticated user; uses the caller's profile and constraints. |
-| Pagination / idempotency / notes | Safe (no side effects) although POST is used for the request body. Deterministic for the same data. |
+| Pagination / idempotency / notes | Safe (no side effects) although POST is used for the request body. Deterministic for the same data. The combination of distinct meals closest to the energy target is accepted only within +/- veya.planning.target-tolerance-pct (default 20 %, AQ-14 PROPOSED). plannedTime is not suggested (omitted). |
+| Open questions | AQ-14 acceptable target range of a suggested menu |
 
 Returns a proposed menu that excludes prohibited items and fits the targets. Nothing is stored; the user
 reviews it and saves the plan explicitly with `POST /api/v1/plans`.
@@ -2876,7 +2881,7 @@ Response 422
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `planning` |
 | BA stories | US-09, US-12, US-20 |
 | Acceptance criteria | US-12: scheduled items appear in the active day. |
@@ -3034,7 +3039,7 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `planning` |
 | BA stories | US-09, US-12 |
 | Acceptance criteria | US-09: the proposed menu excludes prohibited items. US-12: given valid exercises and time, when the plan is saved, then scheduled items appear in the active day and summary/recovery calculations. |
@@ -3271,7 +3276,7 @@ Response 422
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `planning` |
 | BA stories | US-09, US-12, US-18, US-20 |
 | Acceptance criteria | US-18: the response exposes the active version used as baseVersion. |
@@ -3423,7 +3428,7 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `planning` |
 | BA stories | US-10 |
 | Acceptance criteria | US-10: given an active planned meal, when replacement is requested, then only hard-constraint-compliant candidates and reasons are displayed. |
@@ -3616,7 +3621,7 @@ Response 422
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `activity` |
 | BA stories | US-14 |
 | Acceptance criteria | US-14: given changed time/equipment, when requested, then compliant alternatives or a reason for none are shown. |
@@ -3780,7 +3785,7 @@ Response 422
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `planning` |
 | BA stories | US-10, US-14 |
 | Acceptance criteria | US-10: confirmation creates the next plan version and updates totals. US-14: confirmed choice updates the plan and history. |
@@ -4021,7 +4026,7 @@ Response 422
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `planning` |
 | BA stories | US-13, US-15 |
 | Acceptance criteria | US-15: a confirmed meal differing by >= 200 kcal or a planned meal/workout marked missed/skipped sets recoveryRequired; smaller differences do not. |
@@ -4181,7 +4186,7 @@ Response 409
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `recovery` |
 | BA stories | US-15 |
 | Acceptance criteria | US-15: I know when recovery is needed. |
@@ -4276,7 +4281,7 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `activity` |
 | BA stories | US-12 |
 | Acceptance criteria | US-12: given valid exercises and time, the plan can be saved. |
@@ -4362,7 +4367,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `activity` |
 | BA stories | US-13, US-20 |
 | Acceptance criteria | US-13: the actual event persists. |
@@ -4440,7 +4445,7 @@ Response 401
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `activity` |
 | BA stories | US-13, US-15 |
 | Acceptance criteria | US-13: given a planned activity, when its status is recorded, then the actual event persists and deviation detection evaluates the changed plan state. |
@@ -4581,14 +4586,14 @@ Response 409
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `recovery` |
 | BA stories | US-16, US-17, US-19 |
 | Acceptance criteria | US-16: given a recoveryRequired plan, when requested, then completed items are frozen and feasible future combinations are returned with totals or an explicit no-solution response. US-17: each changed item has a human-readable reason. US-19: no feasible combination -> blockingConstraints and 422, no new plan version. |
 | Contract source | BA Table 2.8 (201 proposalId, baseVersion, changed items, totals and reasons; 422 if impossible) + Q1 (201 Created) |
 | Authentication | JWT bearer token |
 | Authorization / ownership | Authenticated user; another user's plan -> 403. |
-| Pagination / idempotency / notes | Not idempotent - each call stores a new proposal. Response time target p95 <= 2 s (NFR-02), visible <= 3 s (KPI-4). The request body is optional. |
+| Pagination / idempotency / notes | Not idempotent - each call stores a new proposal. Response time target p95 <= 2 s (NFR-02), visible <= 3 s (KPI-4). The request body is optional. Engine: frozen items kept; remaining kcal target = profile target - confirmed diary kcal; meals ranked by |remaining target - planned kcal| + 50 kcal per changed meal; infeasible workouts replaced or removed; a skipped/missed workout gets one feasible ADD (plannedTime null). 422 RECOVERY_NOT_FEASIBLE also when no feasible change improves the remaining plan. Totals are recomputed from current confirmed records when the proposal is read. |
 
 UC-01 steps 4-5. The engine loads the active version, freezes completed items, derives remaining targets
 from confirmed facts, filters candidates by hard constraints and ranks feasible combinations. The proposal
@@ -4834,7 +4839,7 @@ Response 422
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `recovery` |
 | BA stories | US-16, US-17, US-18 |
 | Acceptance criteria | US-17: given a proposal, when displayed, then each changed item has a human-readable reason. |
@@ -4993,14 +4998,14 @@ Response 404
 
 | | |
 |---|---|
-| Status | **PLANNED** — EDIT variant BLOCKED (Q12) |
+| Status | **PARTIAL** — EDIT variant BLOCKED (Q12) |
 | Module | `recovery` |
 | BA stories | US-18 |
 | Acceptance criteria | US-18: given a proposal with baseVersion, when a decision is confirmed, then the server checks ownership and version and transactionally applies ACCEPT/EDIT; REJECT leaves active plan unchanged; stale version returns 409. |
 | Contract source | BA Table 2.8 (200 active plan/version; 409 stale version; 400 invalid edit) |
 | Authentication | JWT bearer token |
 | Authorization / ownership | Authenticated user; another user's proposal -> 403. |
-| Pagination / idempotency / notes | A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins. |
+| Pagination / idempotency / notes | PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested). |
 | Open questions | Q12 meaning of EDIT (BLOCKED) |
 
 Explicit user decision (US-18). The server checks ownership and that `baseVersion` equals both the proposal's
@@ -5371,7 +5376,7 @@ Response 409 - alreadyDecided
 
 | | |
 |---|---|
-| Status | **PLANNED** |
+| Status | **IMPLEMENTED** |
 | Module | `history` |
 | BA stories | US-20, US-07 |
 | Acceptance criteria | US-20: given the selected date, when opened, then planned and actual nutrition, remaining totals, activity and active plan version are visible. |

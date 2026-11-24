@@ -3,6 +3,30 @@
 Web-based system for adaptive meal and physical activity planning with **Dynamic Plan Recovery**.
 Diploma project, European Humanities University (2026).
 
+## Stage 3 assessments — start here
+
+| Assessment | Documentation | Requirement matrix |
+|---|---|---|
+| **Back-end** | [`docs/backend/README.md`](docs/backend/README.md) · deployment [`docs/backend/DEPLOYMENT.md`](docs/backend/DEPLOYMENT.md) | [`docs/backend/ASSESSMENT.md`](docs/backend/ASSESSMENT.md) |
+| **Automated tests** | [`docs/testing/README.md`](docs/testing/README.md) | [`docs/testing/ASSESSMENT.md`](docs/testing/ASSESSMENT.md) |
+| API contract | [`docs/api/openapi.yaml`](docs/api/openapi.yaml) (OpenAPI 3.1, served at `/v3/api-docs`) · [`docs/api/API_ENDPOINTS.md`](docs/api/API_ENDPOINTS.md) · [Postman](docs/api/postman/) | |
+
+Evidence (2026-11-23): 45 API operations (44 implemented, 1 partial: EDIT blocked by open question Q12);
+`mvnw verify` → 264 tests, 0 failures; JaCoCo 95.0 % lines / 82.8 % branches overall, 95.2 % / 86.0 % business logic;
+Docker deployment (PostgreSQL + API) verified locally with an end-to-end smoke test (35 HTTP checks + persisted-row checks in PostgreSQL).
+**Public deployment: not verified** (configuration and checklist in `DEPLOYMENT.md`).
+
+Verify everything yourself (Windows PowerShell, Docker Desktop running, JDK 21):
+
+```powershell
+git clone https://github.com/Atikin96/veya.git; cd veya
+& "C:\Program Files\Git\bin\sh.exe" infra/generate-env.sh                 # random local secrets (git-ignored)
+Set-Location backend; .\mvnw.cmd verify; Set-Location ..                       # all tests + coverage gate
+start backend\target\site\jacoco\index.html                                   # coverage report
+docker compose -f infra/docker-compose.yml --profile app up -d --build        # PostgreSQL + API on :8080
+powershell -ExecutionPolicy Bypass -File infra\smoke\smoke-test.ps1 -Db        # end-to-end UC-01 over HTTP
+```
+
 Requirements: [`docs/BA_Malafei_Mikita.docx`](docs/BA_Malafei_Mikita.docx) (Business Analysis).
 Open BA questions and agreed interpretations: [`docs/ba-open-questions.md`](docs/ba-open-questions.md).
 Database design: [`docs/database/`](docs/database/README.md).
@@ -27,10 +51,10 @@ The complete demonstration (clean database → migrations → demo data → veri
 
 | Path | Contents |
 |---|---|
-| `backend/` | REST API — Java 21, Spring Boot 4.1, Maven, PostgreSQL, Flyway |
+| `backend/` | REST API — Java 21, Spring Boot 4.1, Spring Security/JWT, JPA/Hibernate, PostgreSQL, Flyway, Dockerfile |
 | `frontend/` | Web client — React + TypeScript (not yet scaffolded) |
-| `docs/` | Business Analysis, BA decisions, database documentation |
-| `infra/` | Docker Compose, PostgreSQL role provisioning, demo data and SQL scripts |
+| `docs/` | Business Analysis, BA decisions, database, API, back-end and testing documentation |
+| `infra/` | Docker Compose (DB + API, public override with Caddy), role provisioning, demo data, SQL scripts, smoke test |
 | `.github/workflows/` | CI pipelines |
 
 ## Prerequisites

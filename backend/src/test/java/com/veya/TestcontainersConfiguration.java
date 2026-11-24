@@ -13,6 +13,14 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
+    public static final String JWT_SECRET = randomKey();
+
+    private static String randomKey() {
+        byte[] key = new byte[48];
+        new java.security.SecureRandom().nextBytes(key);
+        return java.util.Base64.getEncoder().encodeToString(key);
+    }
+
     @Bean
     DynamicPropertyRegistrar veyaDatabaseProperties() {
         PostgreSQLContainer container = VeyaTestDatabase.shared();
@@ -24,6 +32,9 @@ public class TestcontainersConfiguration {
             registry.add("spring.flyway.url", () -> url);
             registry.add("spring.flyway.user", () -> VeyaTestDatabase.OWNER_USER);
             registry.add("spring.flyway.password", () -> VeyaTestDatabase.OWNER_PASSWORD);
+            // Random signing key per test run (no secret in the repository); cheap bcrypt cost for fast tests.
+            registry.add("veya.security.jwt-secret", () -> JWT_SECRET);
+            registry.add("veya.security.bcrypt-strength", () -> "4");
         };
     }
 }

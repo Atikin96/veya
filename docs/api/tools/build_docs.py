@@ -73,6 +73,8 @@ OPEN_QUESTIONS = [
     ("AQ-10", "Deleting a food entry", "PROPOSED as part of \"log and correct\" (US-06); the BA does not mention deletion explicitly."),
     ("AQ-11", "Recovery requested when not required", "Contract: 409 `RECOVERY_NOT_REQUIRED` (state conflict). The database raises `VY400` for this case; the API maps it."),
     ("AQ-12", "Meal plan: suggestion vs. save", "PROPOSED two steps for US-09: `POST /api/v1/meal-plan-suggestions` (nothing saved) and `POST /api/v1/plans` (explicit save, version 1), so no plan is stored without the user's confirmation."),
+    ("AQ-13", "Rule for \"a constraint makes a future item infeasible\" (US-15 rule 3)", "IMPLEMENTED as PROPOSED, needs approval: an item still PLANNED in the active version is infeasible if a MEAL contains an ingredient excluded for the day, a MEAL needs more preparation minutes or a WORKOUT more minutes than `availableTimeMin`, or a WORKOUT needs equipment missing from `availableEquipment`. `availableIngredients` is stored but not used for infeasibility (the BA does not say whether a meal must consist only of available ingredients)."),
+    ("AQ-14", "Acceptable target range of a suggested menu (US-09)", "IMPLEMENTED as PROPOSED, needs approval: a suggested menu is accepted only if its energy is within +/- `veya.planning.target-tolerance-pct` (default 20 %) of the profile target; otherwise 422 NO_FEASIBLE_MEAL_PLAN with a NUTRITION_TARGET blocking constraint. Macros are reported, not constrained."),
 ]
 VARIABLE_LITERALS = {
     "<your-password>": "{{demoPassword}}",
@@ -226,9 +228,10 @@ def build_catalogue() -> str:
         "# VEYA REST API — endpoint catalogue (MVP contract draft)",
         "",
         "> **Generated from [`openapi.yaml`](openapi.yaml) by `tools/build_docs.py` — do not edit by hand.**",
-        "> Status 2026-11-22: only the actuator health endpoints are **IMPLEMENTED** (verified by `HealthEndpointTests`).",
-        "> All `/api/v1` operations are **PLANNED**: the contract is documented, but no controller exists yet, so the",
-        "> requests cannot succeed against the running backend.",
+        "> Status 2026-11-22: **IMPLEMENTED** operations are served by the running backend and verified over real HTTP by",
+        "> the API integration tests (`backend/src/test/java/com/veya/api`, responses validated against this contract).",
+        "> **PARTIAL** operations work with the limitation stated in their notes. **PLANNED** operations are documented only;",
+        "> no controller exists yet, so those requests cannot succeed against the running backend.",
         "",
         f"Operations: **{len(ops)}** — IMPLEMENTED {counts['IMPLEMENTED']}, PLANNED {counts['PLANNED']}, "
         f"PARTIAL {counts['PARTIAL']}, BLOCKED {counts['BLOCKED']} (fully blocked operations). "
@@ -477,9 +480,11 @@ def postman_item(path, method, op, case):
     label = "[BLOCKED Q12]" if case.get("blocked") else f"[{status}]"
     description = (f"operationId: `{op['operationId']}` · path: `{path}` · method: `{method.upper()}`\n\n"
                    f"Expected: HTTP {case['expect']}. Stories: {', '.join(op['x-veya-stories'])}.\n\n")
-    if status != "IMPLEMENTED":
+    if status == "PLANNED":
         description += ("**PLANNED - not implemented yet.** This request documents the contract and cannot pass an "
                         "integration test until the backend implements the operation.\n\n")
+    elif status == "PARTIAL":
+        description += "**PARTIAL** - implemented with a limitation: " + op.get("x-veya-notes", "") + "\n\n"
     if case.get("blocked"):
         description += "**BLOCKED by Q12** - the EDIT request shape is provisional and may change.\n\n"
     if case.get("destructive"):
@@ -548,8 +553,9 @@ def build_postman():
         "info": {
             "_postman_id": str(uuid.uuid5(uuid.NAMESPACE_URL, "veya-api-collection")),
             "name": "VEYA API (MVP contract draft)",
-            "description": ("Generated from docs/api/openapi.yaml. Only the actuator health requests are IMPLEMENTED; all "
-                            "/api/v1 requests are PLANNED and cannot pass until the backend implements them. Saved "
+            "description": ("Generated from docs/api/openapi.yaml. Each request name starts with the operation status: "
+                            "[IMPLEMENTED] requests work against the running backend, [PARTIAL] ones with the limitation "
+                            "in their description, [PLANNED] ones cannot pass until the backend implements them. Saved "
                             "responses are documented examples, not recorded runs. Set demoPassword and obtain tokens "
                             "locally; never commit them."),
             "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",

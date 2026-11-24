@@ -1,0 +1,36 @@
+# Public deployment override (any Linux host with Docker, e.g. a small VPS), used together with docker-compose.yml:
+#
+#   VEYA_DOMAIN=api.example.org docker compose -f infra/docker-compose.yml -f infra/docker-compose.public.yml \
+#       --profile app up -d --build
+#
+# Only Caddy is reachable from the internet (ports 80/443, automatic HTTPS certificate for VEYA_DOMAIN). The API and
+# PostgreSQL publish no ports at all: they are reachable only inside the Compose network. See docs/backend/DEPLOYMENT.md.
+
+services:
+  postgres:
+    ports: !reset []
+
+  api:
+    ports: !reset []
+    environment:
+      VEYA_CORS_ALLOWED_ORIGINS: ${VEYA_CORS_ALLOWED_ORIGINS:?set the public URL of the web client}
+
+  proxy:
+    profiles: [app]
+    image: caddy:2.8-alpine
+    container_name: veya-proxy
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      VEYA_DOMAIN: ${VEYA_DOMAIN:?set the public DNS name of the API}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - veya-caddy-data:/data
+
+volumes:
+  veya-caddy-data:

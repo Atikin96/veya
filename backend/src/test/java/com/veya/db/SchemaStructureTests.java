@@ -126,7 +126,8 @@ class SchemaStructureTests extends DatabaseTestSupport {
         assertThat(app.queryForObject("SELECT kcal_deviation_threshold FROM recovery_setting", Integer.class)).isEqualTo(200);
         assertThat(app.queryForList("SELECT code FROM meal_slot ORDER BY sort_order", String.class))
                 .containsExactly("BREAKFAST", "LUNCH", "DINNER", "SNACK");
-        assertThat(app.queryForObject("SELECT count(*) FROM food_item", Integer.class)).isEqualTo(24);
+        // V10 rows only: provider products cached at runtime (source PROVIDER) are not reference data
+        assertThat(app.queryForObject("SELECT count(*) FROM food_item WHERE source = 'LOCAL'", Integer.class)).isEqualTo(24);
         assertThat(app.queryForObject("SELECT count(*) FROM meal", Integer.class)).isEqualTo(12);
         assertThat(app.queryForObject("SELECT count(*) FROM exercise", Integer.class)).isEqualTo(12);
         assertThat(app.queryForObject("SELECT count(*) FROM consent_document", Integer.class)).isEqualTo(2);

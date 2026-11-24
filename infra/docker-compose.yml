@@ -1,6 +1,7 @@
-# VEYA local infrastructure.
+# VEYA infrastructure: PostgreSQL 17 and (profile "app") the API container.
 # Usage (from the repository root):
-#   docker compose -f infra/docker-compose.yml up -d
+#   docker compose -f infra/docker-compose.yml up -d                       # database only (development)
+#   docker compose -f infra/docker-compose.yml --profile app up -d --build  # database + API on :8080
 # Passwords are never stored in the repository: create infra/.env (git-ignored) first with
 #   sh infra/generate-env.sh
 #
@@ -24,8 +25,9 @@ services:
       VEYA_READONLY_PASSWORD: ${VEYA_READONLY_PASSWORD:?run sh infra/generate-env.sh first}
       VEYA_ADMIN_PASSWORD: ${VEYA_ADMIN_PASSWORD:?run sh infra/generate-env.sh first}
     ports:
-      # Host port 5433 by default so it does not clash with a locally installed PostgreSQL on 5432.
-      - "${VEYA_DB_PORT:-5433}:5432"
+      # Host port 5433 by default so it does not clash with a locally installed PostgreSQL on 5432. Bound to the
+      # loopback interface only: the database is never reachable from other machines.
+      - "127.0.0.1:${VEYA_DB_PORT:-5433}:5432"
     volumes:
       - veya-postgres-data:/var/lib/postgresql/data
       - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
@@ -37,6 +39,28 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  api:
+    profiles: [app]
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    image: veya-api:local
+    container_name: veya-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      VEYA_DB_URL: jdbc:postgresql://postgres:5432/${VEYA_DB_NAME:-veya}?currentSchema=veya
+      VEYA_APP_PASSWORD: ${VEYA_APP_PASSWORD:?run sh infra/generate-env.sh first}
+      VEYA_OWNER_PASSWORD: ${VEYA_OWNER_PASSWORD:?run sh infra/generate-env.sh first}
+      VEYA_JWT_SECRET: ${VEYA_JWT_SECRET:?run sh infra/generate-env.sh first}
+      VEYA_CORS_ALLOWED_ORIGINS: ${VEYA_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      VEYA_FOOD_PROVIDER_ENABLED: ${VEYA_FOOD_PROVIDER_ENABLED:-false}
+    ports:
+      - "${VEYA_API_BIND:-127.0.0.1}:${VEYA_API_PORT:-8080}:8080"
 
 volumes:
   veya-postgres-data:

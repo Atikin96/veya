@@ -23,6 +23,13 @@ spring:
       hibernate:
         default_schema: veya
 
+  jackson:
+    # Request bodies are strict (contract request schemas use additionalProperties: false): unknown fields and
+    # fractional values for integer fields are rejected with 400 instead of being ignored or truncated.
+    deserialization:
+      fail-on-unknown-properties: true
+      accept-float-as-int: false
+
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -34,13 +41,52 @@ spring:
 server:
   port: ${VEYA_SERVER_PORT:8080}
 
+veya:
+  security:
+    # Base64 HMAC-SHA256 key (>= 32 bytes). Never stored in the repository: infra/.env (generate-env.sh) or the
+    # environment. The application refuses to start without it.
+    jwt-secret: ${VEYA_JWT_SECRET:}
+    # AQ-5 (PROPOSED in the contract, open): 60-minute access token, no refresh token.
+    jwt-ttl: ${VEYA_JWT_TTL:PT60M}
+    jwt-issuer: veya-backend
+    bcrypt-strength: ${VEYA_BCRYPT_STRENGTH:12}
+    # Planned React client (Vite dev server by default); comma-separated list.
+    cors-allowed-origins: ${VEYA_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # External food provider (Open Food Facts adapter, US-05/US-31). Disabled by default: provider choice is open (AQ-7).
+  food-provider:
+    enabled: ${VEYA_FOOD_PROVIDER_ENABLED:false}
+    base-url: ${VEYA_FOOD_PROVIDER_URL:https://world.openfoodfacts.org}
+    timeout: ${VEYA_FOOD_PROVIDER_TIMEOUT:PT2S}
+  planning:
+    # US-09 "configured acceptable target range" of a suggested menu, +/- percent of the energy target (AQ-14).
+    target-tolerance-pct: ${VEYA_PLAN_TARGET_TOLERANCE_PCT:20}
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        # metrics requires a valid token (SecurityConfig); env, beans, configprops etc. are never exposed
+        include: health,info,metrics
   endpoint:
     health:
       probes:
         enabled: true
       show-details: never
+
+logging:
+  pattern:
+    # human-readable console log locally; every line carries the request id (RequestIdFilter)
+    correlation: "[%X{requestId:-}] "
+  level:
+    veya.access: INFO
+
+---
+# Production profile: JSON (Elastic Common Schema) structured logs on stdout, no stack traces of user data.
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  structured:
+    format:
+      console: ecs

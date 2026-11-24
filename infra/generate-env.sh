@@ -1,5 +1,5 @@
 #!/bin/sh
-# Creates infra/.env (git-ignored) with random passwords for the local database roles.
+# Creates infra/.env (git-ignored) with random passwords for the local database roles and a random JWT signing key.
 # No password is stored in the repository. Run once from the repository root (Git Bash, WSL, Linux, macOS):
 #
 #   sh infra/generate-env.sh
@@ -8,14 +8,25 @@
 set -eu
 
 env_file="$(dirname "$0")/.env"
-if [ -f "$env_file" ]; then
-    echo "infra/.env already exists - keeping it."
-    exit 0
-fi
 
 random_password() {
     LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32
 }
+
+# Base64 of 48 random bytes (HMAC-SHA256 key for the API's access tokens).
+random_jwt_secret() {
+    head -c 48 /dev/urandom | base64 | tr -d '\n'
+}
+
+if [ -f "$env_file" ]; then
+    if grep -q '^VEYA_JWT_SECRET=..*' "$env_file"; then
+        echo "infra/.env already exists - keeping it."
+    else
+        printf 'VEYA_JWT_SECRET=%s\n' "$(random_jwt_secret)" >>"$env_file"
+        echo "infra/.env already exists - added a random VEYA_JWT_SECRET, kept all other values."
+    fi
+    exit 0
+fi
 
 umask 077
 cat >"$env_file" <<EOF
@@ -27,5 +38,6 @@ VEYA_OWNER_PASSWORD=$(random_password)
 VEYA_APP_PASSWORD=$(random_password)
 VEYA_READONLY_PASSWORD=$(random_password)
 VEYA_ADMIN_PASSWORD=$(random_password)
+VEYA_JWT_SECRET=$(random_jwt_secret)
 EOF
-echo "Created infra/.env with random passwords."
+echo "Created infra/.env with random passwords and a random JWT signing key."

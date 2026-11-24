@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b2ab37d6-99a8-5a21-8bf2-f89dd45d078a",
     "name": "VEYA API (MVP contract draft)",
-    "description": "Generated from docs/api/openapi.yaml. Only the actuator health requests are IMPLEMENTED; all /api/v1 requests are PLANNED and cannot pass until the backend implements them. Saved responses are documented examples, not recorded runs. Set demoPassword and obtain tokens locally; never commit them.",
+    "description": "Generated from docs/api/openapi.yaml. Each request name starts with the operation status: [IMPLEMENTED] requests work against the running backend, [PARTIAL] ones with the limitation in their description, [PLANNED] ones cannot pass until the backend implements them. Saved responses are documented examples, not recorded runs. Set demoPassword and obtain tokens locally; never commit them.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -250,7 +250,7 @@
           ]
         },
         {
-          "name": "[PLANNED] OpenAPI document is served",
+          "name": "[IMPLEMENTED] OpenAPI document is served",
           "request": {
             "method": "GET",
             "header": [
@@ -269,7 +269,7 @@
                 "api-docs"
               ]
             },
-            "description": "operationId: `getApiDocs` · path: `/v3/api-docs` · method: `GET`\n\nExpected: HTTP 200. Stories: US-29.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getApiDocs` · path: `/v3/api-docs` · method: `GET`\n\nExpected: HTTP 200. Stories: US-29.",
             "auth": {
               "type": "noauth"
             }
@@ -324,7 +324,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Reference data",
+          "name": "[IMPLEMENTED] Reference data",
           "request": {
             "method": "GET",
             "header": [
@@ -344,7 +344,7 @@
                 "reference-data"
               ]
             },
-            "description": "operationId: `getReferenceData` · path: `/api/v1/reference-data` · method: `GET`\n\nExpected: HTTP 200. Stories: US-02, US-03, US-06.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getReferenceData` · path: `/api/v1/reference-data` · method: `GET`\n\nExpected: HTTP 200. Stories: US-02, US-03, US-06."
           },
           "event": [
             {
@@ -395,7 +395,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Reference data without token",
+          "name": "[IMPLEMENTED] Reference data without token",
           "request": {
             "method": "GET",
             "header": [
@@ -415,7 +415,7 @@
                 "reference-data"
               ]
             },
-            "description": "operationId: `getReferenceData` · path: `/api/v1/reference-data` · method: `GET`\n\nExpected: HTTP 401. Stories: US-02, US-03, US-06.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getReferenceData` · path: `/api/v1/reference-data` · method: `GET`\n\nExpected: HTTP 401. Stories: US-02, US-03, US-06.",
             "auth": {
               "type": "noauth"
             }
@@ -479,7 +479,7 @@
       "description": "Ordered happy path and conflicts of UC-01: plan -> deviation -> proposal -> ACCEPT -> stale 409 -> already decided 409 -> dashboard. PLANNED - cannot run until the backend is implemented.",
       "item": [
         {
-          "name": "[PLANNED] Sign in (Anna)",
+          "name": "[IMPLEMENTED] Sign in (Anna)",
           "request": {
             "method": "POST",
             "header": [
@@ -504,7 +504,7 @@
                 "login"
               ]
             },
-            "description": "operationId: `login` · path: `/api/v1/auth/login` · method: `POST`\n\nExpected: HTTP 200. Stories: US-01, US-30.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `login` · path: `/api/v1/auth/login` · method: `POST`\n\nExpected: HTTP 200. Stories: US-01, US-30.",
             "auth": {
               "type": "noauth"
             },
@@ -585,7 +585,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save plan for 2026-11-17",
+          "name": "[IMPLEMENTED] Save plan for 2026-11-17",
           "request": {
             "method": "POST",
             "header": [
@@ -609,7 +609,7 @@
                 "plans"
               ]
             },
-            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 201. Stories: US-09, US-12.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 201. Stories: US-09, US-12.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"items\": [\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"BREAKFAST\",\n      \"plannedTime\": \"08:00\",\n      \"mealId\": 1\n    },\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"LUNCH\",\n      \"plannedTime\": \"13:00\",\n      \"mealId\": 4\n    },\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"DINNER\",\n      \"plannedTime\": \"19:30\",\n      \"mealId\": 7\n    },\n    {\n      \"itemType\": \"WORKOUT\",\n      \"plannedTime\": \"18:00\",\n      \"exerciseId\": 1,\n      \"durationMin\": 30\n    }\n  ]\n}",
@@ -688,7 +688,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Log lunch (+250 kcal against the plan)",
+          "name": "[IMPLEMENTED] Log lunch (+250 kcal against the plan)",
           "request": {
             "method": "POST",
             "header": [
@@ -712,7 +712,7 @@
                 "food-entries"
               ]
             },
-            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-06, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-06, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"mealSlot\": \"LUNCH\",\n  \"inputSource\": \"MANUAL\",\n  \"foodId\": null,\n  \"planItemKey\": \"{{lunchItemKey}}\",\n  \"foodName\": \"Office pizza (3 slices)\",\n  \"portionG\": 330,\n  \"kcal\": 879.9,\n  \"proteinG\": 32,\n  \"fatG\": 38,\n  \"carbsG\": 110\n}",
@@ -786,7 +786,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Confirm lunch (deviation >= 200 kcal)",
+          "name": "[IMPLEMENTED] Confirm lunch (deviation >= 200 kcal)",
           "request": {
             "method": "POST",
             "header": [
@@ -814,7 +814,7 @@
                 "status"
               ]
             },
-            "description": "operationId: `recordPlanItemStatus` · path: `/api/v1/plans/{planId}/items/{itemKey}/status` · method: `POST`\n\nExpected: HTTP 200. Stories: US-13, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `recordPlanItemStatus` · path: `/api/v1/plans/{planId}/items/{itemKey}/status` · method: `POST`\n\nExpected: HTTP 200. Stories: US-13, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"COMPLETED\"\n}",
@@ -891,7 +891,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Skip the planned workout",
+          "name": "[IMPLEMENTED] Skip the planned workout",
           "request": {
             "method": "POST",
             "header": [
@@ -915,7 +915,7 @@
                 "activity-entries"
               ]
             },
-            "description": "operationId: `createActivityEntry` · path: `/api/v1/activity-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-13, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createActivityEntry` · path: `/api/v1/activity-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-13, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"exerciseId\": 1,\n  \"planItemKey\": \"{{workoutItemKey}}\",\n  \"status\": \"SKIPPED\",\n  \"durationMin\": null\n}",
@@ -988,7 +988,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Open deviations",
+          "name": "[IMPLEMENTED] Open deviations",
           "request": {
             "method": "GET",
             "header": [
@@ -1010,7 +1010,7 @@
                 "deviations"
               ]
             },
-            "description": "operationId: `listOpenDeviations` · path: `/api/v1/plans/{planId}/deviations` · method: `GET`\n\nExpected: HTTP 200. Stories: US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listOpenDeviations` · path: `/api/v1/plans/{planId}/deviations` · method: `GET`\n\nExpected: HTTP 200. Stories: US-15."
           },
           "event": [
             {
@@ -1063,7 +1063,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Generate a recovery proposal",
+          "name": "[IMPLEMENTED] Generate a recovery proposal",
           "request": {
             "method": "POST",
             "header": [
@@ -1089,7 +1089,7 @@
                 "recovery-proposals"
               ]
             },
-            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": {{planVersion}}\n}",
@@ -1167,7 +1167,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Generate a second proposal (for the stale case)",
+          "name": "[IMPLEMENTED] Generate a second proposal (for the stale case)",
           "request": {
             "method": "POST",
             "header": [
@@ -1193,7 +1193,7 @@
                 "recovery-proposals"
               ]
             },
-            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": {{planVersion}}\n}",
@@ -1269,7 +1269,7 @@
           ]
         },
         {
-          "name": "[PLANNED] ACCEPT the proposal",
+          "name": "[PARTIAL] ACCEPT the proposal",
           "request": {
             "method": "POST",
             "header": [
@@ -1295,7 +1295,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"ACCEPT\",\n  \"baseVersion\": {{proposalBaseVersion}}\n}",
@@ -1371,7 +1371,7 @@
           ]
         },
         {
-          "name": "[PLANNED] ACCEPT a stale proposal",
+          "name": "[PARTIAL] ACCEPT a stale proposal",
           "request": {
             "method": "POST",
             "header": [
@@ -1397,7 +1397,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"ACCEPT\",\n  \"baseVersion\": 1\n}",
@@ -1473,7 +1473,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Decide the same proposal again",
+          "name": "[PARTIAL] Decide the same proposal again",
           "request": {
             "method": "POST",
             "header": [
@@ -1499,7 +1499,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"ACCEPT\",\n  \"baseVersion\": 1\n}",
@@ -1575,7 +1575,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Dashboard of 2026-11-16",
+          "name": "[IMPLEMENTED] Dashboard of 2026-11-16",
           "request": {
             "method": "GET",
             "header": [
@@ -1597,7 +1597,7 @@
                 "summary"
               ]
             },
-            "description": "operationId: `getDaySummary` · path: `/api/v1/days/{date}/summary` · method: `GET`\n\nExpected: HTTP 200. Stories: US-20, US-07.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getDaySummary` · path: `/api/v1/days/{date}/summary` · method: `GET`\n\nExpected: HTTP 200. Stories: US-20, US-07."
           },
           "event": [
             {
@@ -1656,7 +1656,7 @@
       "description": "Registration, sign-in, account, consent, export and deletion (US-01, US-04, US-30, LEG-2, LEG-4).",
       "item": [
         {
-          "name": "[PLANNED] Register (Anna)",
+          "name": "[IMPLEMENTED] Register (Anna)",
           "request": {
             "method": "POST",
             "header": [
@@ -1681,7 +1681,7 @@
                 "register"
               ]
             },
-            "description": "operationId: `register` · path: `/api/v1/auth/register` · method: `POST`\n\nExpected: HTTP 201. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `register` · path: `/api/v1/auth/register` · method: `POST`\n\nExpected: HTTP 201. Stories: US-01.",
             "auth": {
               "type": "noauth"
             },
@@ -1762,7 +1762,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Register without adult confirmation",
+          "name": "[IMPLEMENTED] Register without adult confirmation",
           "request": {
             "method": "POST",
             "header": [
@@ -1787,7 +1787,7 @@
                 "register"
               ]
             },
-            "description": "operationId: `register` · path: `/api/v1/auth/register` · method: `POST`\n\nExpected: HTTP 400. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `register` · path: `/api/v1/auth/register` · method: `POST`\n\nExpected: HTTP 400. Stories: US-01.",
             "auth": {
               "type": "noauth"
             },
@@ -1868,7 +1868,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Register with an existing e-mail",
+          "name": "[IMPLEMENTED] Register with an existing e-mail",
           "request": {
             "method": "POST",
             "header": [
@@ -1893,7 +1893,7 @@
                 "register"
               ]
             },
-            "description": "operationId: `register` · path: `/api/v1/auth/register` · method: `POST`\n\nExpected: HTTP 409. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `register` · path: `/api/v1/auth/register` · method: `POST`\n\nExpected: HTTP 409. Stories: US-01.",
             "auth": {
               "type": "noauth"
             },
@@ -1974,7 +1974,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Sign in (Anna)",
+          "name": "[IMPLEMENTED] Sign in (Anna)",
           "request": {
             "method": "POST",
             "header": [
@@ -1999,7 +1999,7 @@
                 "login"
               ]
             },
-            "description": "operationId: `login` · path: `/api/v1/auth/login` · method: `POST`\n\nExpected: HTTP 200. Stories: US-01, US-30.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `login` · path: `/api/v1/auth/login` · method: `POST`\n\nExpected: HTTP 200. Stories: US-01, US-30.",
             "auth": {
               "type": "noauth"
             },
@@ -2080,7 +2080,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Sign in with a wrong password",
+          "name": "[IMPLEMENTED] Sign in with a wrong password",
           "request": {
             "method": "POST",
             "header": [
@@ -2105,7 +2105,7 @@
                 "login"
               ]
             },
-            "description": "operationId: `login` · path: `/api/v1/auth/login` · method: `POST`\n\nExpected: HTTP 401. Stories: US-01, US-30.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `login` · path: `/api/v1/auth/login` · method: `POST`\n\nExpected: HTTP 401. Stories: US-01, US-30.",
             "auth": {
               "type": "noauth"
             },
@@ -2186,7 +2186,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Current account",
+          "name": "[IMPLEMENTED] Current account",
           "request": {
             "method": "GET",
             "header": [
@@ -2206,7 +2206,7 @@
                 "me"
               ]
             },
-            "description": "operationId: `getMe` · path: `/api/v1/me` · method: `GET`\n\nExpected: HTTP 200. Stories: US-01, US-30.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getMe` · path: `/api/v1/me` · method: `GET`\n\nExpected: HTTP 200. Stories: US-01, US-30."
           },
           "event": [
             {
@@ -2257,7 +2257,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Current account without token",
+          "name": "[IMPLEMENTED] Current account without token",
           "request": {
             "method": "GET",
             "header": [
@@ -2277,7 +2277,7 @@
                 "me"
               ]
             },
-            "description": "operationId: `getMe` · path: `/api/v1/me` · method: `GET`\n\nExpected: HTTP 401. Stories: US-01, US-30.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getMe` · path: `/api/v1/me` · method: `GET`\n\nExpected: HTTP 401. Stories: US-01, US-30.",
             "auth": {
               "type": "noauth"
             }
@@ -2335,7 +2335,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Current account with an invalid token",
+          "name": "[IMPLEMENTED] Current account with an invalid token",
           "request": {
             "method": "GET",
             "header": [
@@ -2355,7 +2355,7 @@
                 "me"
               ]
             },
-            "description": "operationId: `getMe` · path: `/api/v1/me` · method: `GET`\n\nExpected: HTTP 401. Stories: US-01, US-30.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getMe` · path: `/api/v1/me` · method: `GET`\n\nExpected: HTTP 401. Stories: US-01, US-30.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2427,7 +2427,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Delete account without confirmation",
+          "name": "[IMPLEMENTED] Delete account without confirmation",
           "request": {
             "method": "DELETE",
             "header": [
@@ -2453,7 +2453,7 @@
                 }
               ]
             },
-            "description": "operationId: `deleteMyAccount` · path: `/api/v1/me` · method: `DELETE`\n\nExpected: HTTP 400. Stories: US-04.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `deleteMyAccount` · path: `/api/v1/me` · method: `DELETE`\n\nExpected: HTTP 400. Stories: US-04."
           },
           "event": [
             {
@@ -2511,7 +2511,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Export my data",
+          "name": "[IMPLEMENTED] Export my data",
           "request": {
             "method": "GET",
             "header": [
@@ -2532,7 +2532,7 @@
                 "export"
               ]
             },
-            "description": "operationId: `exportMyData` · path: `/api/v1/me/export` · method: `GET`\n\nExpected: HTTP 200. Stories: US-04.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `exportMyData` · path: `/api/v1/me/export` · method: `GET`\n\nExpected: HTTP 200. Stories: US-04."
           },
           "event": [
             {
@@ -2584,7 +2584,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Consent documents",
+          "name": "[IMPLEMENTED] Consent documents",
           "request": {
             "method": "GET",
             "header": [
@@ -2604,7 +2604,7 @@
                 "consent-documents"
               ]
             },
-            "description": "operationId: `listConsentDocuments` · path: `/api/v1/consent-documents` · method: `GET`\n\nExpected: HTTP 200. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `listConsentDocuments` · path: `/api/v1/consent-documents` · method: `GET`\n\nExpected: HTTP 200. Stories: US-01.",
             "auth": {
               "type": "noauth"
             }
@@ -2661,7 +2661,7 @@
           ]
         },
         {
-          "name": "[PLANNED] My consents",
+          "name": "[IMPLEMENTED] My consents",
           "request": {
             "method": "GET",
             "header": [
@@ -2682,7 +2682,7 @@
                 "consents"
               ]
             },
-            "description": "operationId: `listMyConsents` · path: `/api/v1/me/consents` · method: `GET`\n\nExpected: HTTP 200. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listMyConsents` · path: `/api/v1/me/consents` · method: `GET`\n\nExpected: HTTP 200. Stories: US-01."
           },
           "event": [
             {
@@ -2735,7 +2735,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Accept a consent document that is already active",
+          "name": "[IMPLEMENTED] Accept a consent document that is already active",
           "request": {
             "method": "POST",
             "header": [
@@ -2760,7 +2760,7 @@
                 "consents"
               ]
             },
-            "description": "operationId: `grantConsent` · path: `/api/v1/me/consents` · method: `POST`\n\nExpected: HTTP 409. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `grantConsent` · path: `/api/v1/me/consents` · method: `POST`\n\nExpected: HTTP 409. Stories: US-01.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"consentDocumentId\": 2\n}",
@@ -2835,7 +2835,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Withdraw a consent",
+          "name": "[IMPLEMENTED] Withdraw a consent",
           "request": {
             "method": "POST",
             "header": [
@@ -2858,7 +2858,7 @@
                 "withdrawal"
               ]
             },
-            "description": "operationId: `withdrawConsent` · path: `/api/v1/me/consents/{consentId}/withdrawal` · method: `POST`\n\nExpected: HTTP 200. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `withdrawConsent` · path: `/api/v1/me/consents/{consentId}/withdrawal` · method: `POST`\n\nExpected: HTTP 200. Stories: US-01."
           },
           "event": [
             {
@@ -2912,7 +2912,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Withdraw the same consent again",
+          "name": "[IMPLEMENTED] Withdraw the same consent again",
           "request": {
             "method": "POST",
             "header": [
@@ -2935,7 +2935,7 @@
                 "withdrawal"
               ]
             },
-            "description": "operationId: `withdrawConsent` · path: `/api/v1/me/consents/{consentId}/withdrawal` · method: `POST`\n\nExpected: HTTP 409. Stories: US-01.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `withdrawConsent` · path: `/api/v1/me/consents/{consentId}/withdrawal` · method: `POST`\n\nExpected: HTTP 409. Stories: US-01."
           },
           "event": [
             {
@@ -2996,7 +2996,7 @@
       "description": "Profile, goal, permanent food exclusions and daily planning constraints (US-02, US-03).",
       "item": [
         {
-          "name": "[PLANNED] My profile",
+          "name": "[IMPLEMENTED] My profile",
           "request": {
             "method": "GET",
             "header": [
@@ -3017,7 +3017,7 @@
                 "profile"
               ]
             },
-            "description": "operationId: `getMyProfile` · path: `/api/v1/me/profile` · method: `GET`\n\nExpected: HTTP 200. Stories: US-02.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getMyProfile` · path: `/api/v1/me/profile` · method: `GET`\n\nExpected: HTTP 200. Stories: US-02."
           },
           "event": [
             {
@@ -3069,7 +3069,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save my profile",
+          "name": "[IMPLEMENTED] Save my profile",
           "request": {
             "method": "PUT",
             "header": [
@@ -3094,7 +3094,7 @@
                 "profile"
               ]
             },
-            "description": "operationId: `saveMyProfile` · path: `/api/v1/me/profile` · method: `PUT`\n\nExpected: HTTP 200. Stories: US-02, US-03.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `saveMyProfile` · path: `/api/v1/me/profile` · method: `PUT`\n\nExpected: HTTP 200. Stories: US-02, US-03.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"goal\": \"LOSE_WEIGHT\",\n  \"energyTargetKcal\": 1900,\n  \"proteinTargetG\": 110,\n  \"fatTargetG\": 60,\n  \"carbsTargetG\": 220,\n  \"foodExclusions\": [\n    \"PEANUT\"\n  ]\n}",
@@ -3168,7 +3168,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save profile with an out-of-range energy target",
+          "name": "[IMPLEMENTED] Save profile with an out-of-range energy target",
           "request": {
             "method": "PUT",
             "header": [
@@ -3193,7 +3193,7 @@
                 "profile"
               ]
             },
-            "description": "operationId: `saveMyProfile` · path: `/api/v1/me/profile` · method: `PUT`\n\nExpected: HTTP 400. Stories: US-02, US-03.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `saveMyProfile` · path: `/api/v1/me/profile` · method: `PUT`\n\nExpected: HTTP 400. Stories: US-02, US-03.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"goal\": \"LOSE_WEIGHT\",\n  \"energyTargetKcal\": 100,\n  \"proteinTargetG\": 110,\n  \"fatTargetG\": 60,\n  \"carbsTargetG\": 220,\n  \"foodExclusions\": []\n}",
@@ -3268,7 +3268,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Constraints of the day",
+          "name": "[IMPLEMENTED] Constraints of the day",
           "request": {
             "method": "GET",
             "header": [
@@ -3289,7 +3289,7 @@
                 "{{planDate}}"
               ]
             },
-            "description": "operationId: `getDailyConstraints` · path: `/api/v1/constraints/{date}` · method: `GET`\n\nExpected: HTTP 200. Stories: US-03.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getDailyConstraints` · path: `/api/v1/constraints/{date}` · method: `GET`\n\nExpected: HTTP 200. Stories: US-03."
           },
           "event": [
             {
@@ -3341,7 +3341,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save constraints (fish unavailable, 40 min)",
+          "name": "[IMPLEMENTED] Save constraints (fish unavailable, 40 min)",
           "request": {
             "method": "PUT",
             "header": [
@@ -3366,7 +3366,7 @@
                 "{{planDate}}"
               ]
             },
-            "description": "operationId: `saveDailyConstraints` · path: `/api/v1/constraints/{date}` · method: `PUT`\n\nExpected: HTTP 200. Stories: US-03, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `saveDailyConstraints` · path: `/api/v1/constraints/{date}` · method: `PUT`\n\nExpected: HTTP 200. Stories: US-03, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"availableTimeMin\": 40,\n  \"availableEquipment\": [],\n  \"availableIngredients\": [],\n  \"excludedIngredients\": [\n    \"FISH\"\n  ]\n}",
@@ -3440,7 +3440,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save constraints with negative time",
+          "name": "[IMPLEMENTED] Save constraints with negative time",
           "request": {
             "method": "PUT",
             "header": [
@@ -3465,7 +3465,7 @@
                 "{{planDate}}"
               ]
             },
-            "description": "operationId: `saveDailyConstraints` · path: `/api/v1/constraints/{date}` · method: `PUT`\n\nExpected: HTTP 400. Stories: US-03, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `saveDailyConstraints` · path: `/api/v1/constraints/{date}` · method: `PUT`\n\nExpected: HTTP 400. Stories: US-03, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"availableTimeMin\": -5,\n  \"availableEquipment\": [],\n  \"availableIngredients\": [],\n  \"excludedIngredients\": []\n}",
@@ -3546,7 +3546,7 @@
       "description": "Food catalogue search, diary, totals, saved/recent meals (US-05 to US-08, US-31).",
       "item": [
         {
-          "name": "[PLANNED] Search foods \"chick\"",
+          "name": "[IMPLEMENTED] Search foods \"chick\"",
           "request": {
             "method": "GET",
             "header": [
@@ -3572,7 +3572,7 @@
                 }
               ]
             },
-            "description": "operationId: `searchFoods` · path: `/api/v1/foods` · method: `GET`\n\nExpected: HTTP 200. Stories: US-05, US-31.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `searchFoods` · path: `/api/v1/foods` · method: `GET`\n\nExpected: HTTP 200. Stories: US-05, US-31."
           },
           "event": [
             {
@@ -3629,7 +3629,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Search with a one-letter query",
+          "name": "[IMPLEMENTED] Search with a one-letter query",
           "request": {
             "method": "GET",
             "header": [
@@ -3655,7 +3655,7 @@
                 }
               ]
             },
-            "description": "operationId: `searchFoods` · path: `/api/v1/foods` · method: `GET`\n\nExpected: HTTP 400. Stories: US-05, US-31.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `searchFoods` · path: `/api/v1/foods` · method: `GET`\n\nExpected: HTTP 400. Stories: US-05, US-31."
           },
           "event": [
             {
@@ -3713,7 +3713,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Lunch meals",
+          "name": "[IMPLEMENTED] Lunch meals",
           "request": {
             "method": "GET",
             "header": [
@@ -3739,7 +3739,7 @@
                 }
               ]
             },
-            "description": "operationId: `listMeals` · path: `/api/v1/meals` · method: `GET`\n\nExpected: HTTP 200. Stories: US-09.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listMeals` · path: `/api/v1/meals` · method: `GET`\n\nExpected: HTTP 200. Stories: US-09."
           },
           "event": [
             {
@@ -3796,7 +3796,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Diary of 2026-11-16",
+          "name": "[IMPLEMENTED] Diary of 2026-11-16",
           "request": {
             "method": "GET",
             "header": [
@@ -3822,7 +3822,7 @@
                 }
               ]
             },
-            "description": "operationId: `listFoodEntries` · path: `/api/v1/food-entries` · method: `GET`\n\nExpected: HTTP 200. Stories: US-06, US-07.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listFoodEntries` · path: `/api/v1/food-entries` · method: `GET`\n\nExpected: HTTP 200. Stories: US-06, US-07."
           },
           "event": [
             {
@@ -3879,7 +3879,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Log lunch (+250 kcal against the plan)",
+          "name": "[IMPLEMENTED] Log lunch (+250 kcal against the plan)",
           "request": {
             "method": "POST",
             "header": [
@@ -3903,7 +3903,7 @@
                 "food-entries"
               ]
             },
-            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-06, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-06, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"mealSlot\": \"LUNCH\",\n  \"inputSource\": \"MANUAL\",\n  \"foodId\": null,\n  \"planItemKey\": \"{{lunchItemKey}}\",\n  \"foodName\": \"Office pizza (3 slices)\",\n  \"portionG\": 330,\n  \"kcal\": 879.9,\n  \"proteinG\": 32,\n  \"fatG\": 38,\n  \"carbsG\": 110\n}",
@@ -3977,7 +3977,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Log food with zero portion",
+          "name": "[IMPLEMENTED] Log food with zero portion",
           "request": {
             "method": "POST",
             "header": [
@@ -4001,7 +4001,7 @@
                 "food-entries"
               ]
             },
-            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 400. Stories: US-06, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 400. Stories: US-06, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"mealSlot\": \"SNACK\",\n  \"inputSource\": \"MANUAL\",\n  \"foodName\": \"Apple\",\n  \"portionG\": 0,\n  \"kcal\": 50,\n  \"proteinG\": 0,\n  \"fatG\": 0,\n  \"carbsG\": 12\n}",
@@ -4075,7 +4075,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Log food without token",
+          "name": "[IMPLEMENTED] Log food without token",
           "request": {
             "method": "POST",
             "header": [
@@ -4099,7 +4099,7 @@
                 "food-entries"
               ]
             },
-            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 401. Stories: US-06, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createFoodEntry` · path: `/api/v1/food-entries` · method: `POST`\n\nExpected: HTTP 401. Stories: US-06, US-15.",
             "auth": {
               "type": "noauth"
             },
@@ -4179,7 +4179,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Correct the lunch entry",
+          "name": "[IMPLEMENTED] Correct the lunch entry",
           "request": {
             "method": "PATCH",
             "header": [
@@ -4204,7 +4204,7 @@
                 "{{foodEntryId}}"
               ]
             },
-            "description": "operationId: `updateFoodEntry` · path: `/api/v1/food-entries/{entryId}` · method: `PATCH`\n\nExpected: HTTP 200. Stories: US-06, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `updateFoodEntry` · path: `/api/v1/food-entries/{entryId}` · method: `PATCH`\n\nExpected: HTTP 200. Stories: US-06, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"portionG\": 300,\n  \"kcal\": 799.9\n}",
@@ -4278,7 +4278,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Correct another user's entry",
+          "name": "[IMPLEMENTED] Correct another user's entry",
           "request": {
             "method": "PATCH",
             "header": [
@@ -4303,7 +4303,7 @@
                 "{{foodEntryId}}"
               ]
             },
-            "description": "operationId: `updateFoodEntry` · path: `/api/v1/food-entries/{entryId}` · method: `PATCH`\n\nExpected: HTTP 403. Stories: US-06, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `updateFoodEntry` · path: `/api/v1/food-entries/{entryId}` · method: `PATCH`\n\nExpected: HTTP 403. Stories: US-06, US-15.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -4398,7 +4398,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Delete a food entry",
+          "name": "[IMPLEMENTED] Delete a food entry",
           "request": {
             "method": "DELETE",
             "header": [
@@ -4419,7 +4419,7 @@
                 "{{foodEntryId}}"
               ]
             },
-            "description": "operationId: `deleteFoodEntry` · path: `/api/v1/food-entries/{entryId}` · method: `DELETE`\n\nExpected: HTTP 204. Stories: US-06.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `deleteFoodEntry` · path: `/api/v1/food-entries/{entryId}` · method: `DELETE`\n\nExpected: HTTP 204. Stories: US-06."
           },
           "event": [
             {
@@ -4434,7 +4434,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Recent foods",
+          "name": "[IMPLEMENTED] Recent foods",
           "request": {
             "method": "GET",
             "header": [
@@ -4455,7 +4455,7 @@
                 "recent"
               ]
             },
-            "description": "operationId: `listRecentFoodEntries` · path: `/api/v1/food-entries/recent` · method: `GET`\n\nExpected: HTTP 200. Stories: US-08.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listRecentFoodEntries` · path: `/api/v1/food-entries/recent` · method: `GET`\n\nExpected: HTTP 200. Stories: US-08."
           },
           "event": [
             {
@@ -4507,7 +4507,7 @@
           ]
         },
         {
-          "name": "[PLANNED] My saved meals",
+          "name": "[IMPLEMENTED] My saved meals",
           "request": {
             "method": "GET",
             "header": [
@@ -4527,7 +4527,7 @@
                 "saved-meals"
               ]
             },
-            "description": "operationId: `listSavedMeals` · path: `/api/v1/saved-meals` · method: `GET`\n\nExpected: HTTP 200. Stories: US-08.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listSavedMeals` · path: `/api/v1/saved-meals` · method: `GET`\n\nExpected: HTTP 200. Stories: US-08."
           },
           "event": [
             {
@@ -4579,7 +4579,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save a breakfast template",
+          "name": "[IMPLEMENTED] Save a breakfast template",
           "request": {
             "method": "POST",
             "header": [
@@ -4603,7 +4603,7 @@
                 "saved-meals"
               ]
             },
-            "description": "operationId: `createSavedMeal` · path: `/api/v1/saved-meals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-08.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createSavedMeal` · path: `/api/v1/saved-meals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-08.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"My usual breakfast\",\n  \"items\": [\n    {\n      \"foodId\": 12,\n      \"foodName\": \"Eggs\",\n      \"portionG\": 120,\n      \"kcal\": 171.6,\n      \"proteinG\": 15.1,\n      \"fatG\": 11.4,\n      \"carbsG\": 0.8\n    },\n    {\n      \"foodId\": 13,\n      \"foodName\": \"Whole wheat bread\",\n      \"portionG\": 60,\n      \"kcal\": 148.2,\n      \"proteinG\": 7.8,\n      \"fatG\": 2.0,\n      \"carbsG\": 24.6\n    }\n  ]\n}",
@@ -4677,7 +4677,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save a template with a duplicate name",
+          "name": "[IMPLEMENTED] Save a template with a duplicate name",
           "request": {
             "method": "POST",
             "header": [
@@ -4701,7 +4701,7 @@
                 "saved-meals"
               ]
             },
-            "description": "operationId: `createSavedMeal` · path: `/api/v1/saved-meals` · method: `POST`\n\nExpected: HTTP 409. Stories: US-08.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createSavedMeal` · path: `/api/v1/saved-meals` · method: `POST`\n\nExpected: HTTP 409. Stories: US-08.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"My usual breakfast\",\n  \"items\": [\n    {\n      \"foodId\": 12,\n      \"foodName\": \"Eggs\",\n      \"portionG\": 120,\n      \"kcal\": 171.6,\n      \"proteinG\": 15.1,\n      \"fatG\": 11.4,\n      \"carbsG\": 0.8\n    },\n    {\n      \"foodId\": 13,\n      \"foodName\": \"Whole wheat bread\",\n      \"portionG\": 60,\n      \"kcal\": 148.2,\n      \"proteinG\": 7.8,\n      \"fatG\": 2.0,\n      \"carbsG\": 24.6\n    }\n  ]\n}",
@@ -4775,7 +4775,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Log my usual breakfast",
+          "name": "[IMPLEMENTED] Log my usual breakfast",
           "request": {
             "method": "POST",
             "header": [
@@ -4801,7 +4801,7 @@
                 "entries"
               ]
             },
-            "description": "operationId: `logSavedMeal` · path: `/api/v1/saved-meals/{savedMealId}/entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-08.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `logSavedMeal` · path: `/api/v1/saved-meals/{savedMealId}/entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-08.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"mealSlot\": \"BREAKFAST\",\n  \"planItemKey\": null\n}",
@@ -4876,7 +4876,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Nutrition summary of 2026-11-16",
+          "name": "[IMPLEMENTED] Nutrition summary of 2026-11-16",
           "request": {
             "method": "GET",
             "header": [
@@ -4898,7 +4898,7 @@
                 "nutrition"
               ]
             },
-            "description": "operationId: `getNutritionSummary` · path: `/api/v1/days/{date}/nutrition` · method: `GET`\n\nExpected: HTTP 200. Stories: US-07.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getNutritionSummary` · path: `/api/v1/days/{date}/nutrition` · method: `GET`\n\nExpected: HTTP 200. Stories: US-07."
           },
           "event": [
             {
@@ -4957,7 +4957,7 @@
       "description": "Daily plans, plan items, meal plan suggestions, replacements, item status (US-09, US-10, US-12, US-14, US-15).",
       "item": [
         {
-          "name": "[PLANNED] Suggest a meal plan for 2026-11-17",
+          "name": "[IMPLEMENTED] Suggest a meal plan for 2026-11-17",
           "request": {
             "method": "POST",
             "header": [
@@ -4981,7 +4981,7 @@
                 "meal-plan-suggestions"
               ]
             },
-            "description": "operationId: `suggestMealPlan` · path: `/api/v1/meal-plan-suggestions` · method: `POST`\n\nExpected: HTTP 200. Stories: US-09.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `suggestMealPlan` · path: `/api/v1/meal-plan-suggestions` · method: `POST`\n\nExpected: HTTP 200. Stories: US-09.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"mealSlots\": [\n    \"BREAKFAST\",\n    \"LUNCH\",\n    \"DINNER\"\n  ]\n}",
@@ -5054,7 +5054,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Plan of 2026-11-16",
+          "name": "[IMPLEMENTED] Plan of 2026-11-16",
           "request": {
             "method": "GET",
             "header": [
@@ -5080,7 +5080,7 @@
                 }
               ]
             },
-            "description": "operationId: `getPlanByDate` · path: `/api/v1/plans` · method: `GET`\n\nExpected: HTTP 200. Stories: US-09, US-12, US-20.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getPlanByDate` · path: `/api/v1/plans` · method: `GET`\n\nExpected: HTTP 200. Stories: US-09, US-12, US-20."
           },
           "event": [
             {
@@ -5139,7 +5139,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save plan for 2026-11-17",
+          "name": "[IMPLEMENTED] Save plan for 2026-11-17",
           "request": {
             "method": "POST",
             "header": [
@@ -5163,7 +5163,7 @@
                 "plans"
               ]
             },
-            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 201. Stories: US-09, US-12.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 201. Stories: US-09, US-12.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"items\": [\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"BREAKFAST\",\n      \"plannedTime\": \"08:00\",\n      \"mealId\": 1\n    },\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"LUNCH\",\n      \"plannedTime\": \"13:00\",\n      \"mealId\": 4\n    },\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"DINNER\",\n      \"plannedTime\": \"19:30\",\n      \"mealId\": 7\n    },\n    {\n      \"itemType\": \"WORKOUT\",\n      \"plannedTime\": \"18:00\",\n      \"exerciseId\": 1,\n      \"durationMin\": 30\n    }\n  ]\n}",
@@ -5242,7 +5242,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save a second plan for the same date",
+          "name": "[IMPLEMENTED] Save a second plan for the same date",
           "request": {
             "method": "POST",
             "header": [
@@ -5266,7 +5266,7 @@
                 "plans"
               ]
             },
-            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 409. Stories: US-09, US-12.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 409. Stories: US-09, US-12.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"items\": [\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"BREAKFAST\",\n      \"plannedTime\": \"08:00\",\n      \"mealId\": 1\n    },\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"LUNCH\",\n      \"plannedTime\": \"13:00\",\n      \"mealId\": 4\n    },\n    {\n      \"itemType\": \"MEAL\",\n      \"mealSlot\": \"DINNER\",\n      \"plannedTime\": \"19:30\",\n      \"mealId\": 7\n    },\n    {\n      \"itemType\": \"WORKOUT\",\n      \"plannedTime\": \"18:00\",\n      \"exerciseId\": 1,\n      \"durationMin\": 30\n    }\n  ]\n}",
@@ -5340,7 +5340,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Save a plan with a workout of 0 minutes",
+          "name": "[IMPLEMENTED] Save a plan with a workout of 0 minutes",
           "request": {
             "method": "POST",
             "header": [
@@ -5364,7 +5364,7 @@
                 "plans"
               ]
             },
-            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 400. Stories: US-09, US-12.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createPlan` · path: `/api/v1/plans` · method: `POST`\n\nExpected: HTTP 400. Stories: US-09, US-12.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"2026-11-18\",\n  \"items\": [\n    {\n      \"itemType\": \"WORKOUT\",\n      \"plannedTime\": \"18:00\",\n      \"exerciseId\": 1,\n      \"durationMin\": 0\n    }\n  ]\n}",
@@ -5438,7 +5438,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Get plan",
+          "name": "[IMPLEMENTED] Get plan",
           "request": {
             "method": "GET",
             "header": [
@@ -5459,7 +5459,7 @@
                 "{{planId}}"
               ]
             },
-            "description": "operationId: `getPlan` · path: `/api/v1/plans/{planId}` · method: `GET`\n\nExpected: HTTP 200. Stories: US-09, US-12, US-18, US-20.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getPlan` · path: `/api/v1/plans/{planId}` · method: `GET`\n\nExpected: HTTP 200. Stories: US-09, US-12, US-18, US-20."
           },
           "event": [
             {
@@ -5511,7 +5511,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Get another user's plan",
+          "name": "[IMPLEMENTED] Get another user's plan",
           "request": {
             "method": "GET",
             "header": [
@@ -5532,7 +5532,7 @@
                 "{{planId}}"
               ]
             },
-            "description": "operationId: `getPlan` · path: `/api/v1/plans/{planId}` · method: `GET`\n\nExpected: HTTP 403. Stories: US-09, US-12, US-18, US-20.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getPlan` · path: `/api/v1/plans/{planId}` · method: `GET`\n\nExpected: HTTP 403. Stories: US-09, US-12, US-18, US-20.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -5605,7 +5605,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Get a plan that does not exist",
+          "name": "[IMPLEMENTED] Get a plan that does not exist",
           "request": {
             "method": "GET",
             "header": [
@@ -5626,7 +5626,7 @@
                 "00000000-0000-4000-8000-000000000000"
               ]
             },
-            "description": "operationId: `getPlan` · path: `/api/v1/plans/{planId}` · method: `GET`\n\nExpected: HTTP 404. Stories: US-09, US-12, US-18, US-20.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getPlan` · path: `/api/v1/plans/{planId}` · method: `GET`\n\nExpected: HTTP 404. Stories: US-09, US-12, US-18, US-20."
           },
           "event": [
             {
@@ -5679,7 +5679,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Meal options for the dinner",
+          "name": "[IMPLEMENTED] Meal options for the dinner",
           "request": {
             "method": "POST",
             "header": [
@@ -5703,7 +5703,7 @@
                 "meal-options"
               ]
             },
-            "description": "operationId: `getMealOptions` · path: `/api/v1/meal-options` · method: `POST`\n\nExpected: HTTP 200. Stories: US-10.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getMealOptions` · path: `/api/v1/meal-options` · method: `POST`\n\nExpected: HTTP 200. Stories: US-10.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"planId\": \"{{planId}}\",\n  \"itemKey\": \"{{dinnerItemKey}}\"\n}",
@@ -5776,7 +5776,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Meal options when nothing is feasible",
+          "name": "[IMPLEMENTED] Meal options when nothing is feasible",
           "request": {
             "method": "POST",
             "header": [
@@ -5800,7 +5800,7 @@
                 "meal-options"
               ]
             },
-            "description": "operationId: `getMealOptions` · path: `/api/v1/meal-options` · method: `POST`\n\nExpected: HTTP 422. Stories: US-10.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getMealOptions` · path: `/api/v1/meal-options` · method: `POST`\n\nExpected: HTTP 422. Stories: US-10.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"planId\": \"{{planId}}\",\n  \"itemKey\": \"{{dinnerItemKey}}\"\n}",
@@ -5874,7 +5874,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Exercise options for the workout",
+          "name": "[IMPLEMENTED] Exercise options for the workout",
           "request": {
             "method": "POST",
             "header": [
@@ -5898,7 +5898,7 @@
                 "exercise-options"
               ]
             },
-            "description": "operationId: `getExerciseOptions` · path: `/api/v1/exercise-options` · method: `POST`\n\nExpected: HTTP 200. Stories: US-14.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getExerciseOptions` · path: `/api/v1/exercise-options` · method: `POST`\n\nExpected: HTTP 200. Stories: US-14.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"planId\": \"{{planId}}\",\n  \"itemKey\": \"{{workoutItemKey}}\"\n}",
@@ -5971,7 +5971,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Replace the dinner with tofu stir-fry",
+          "name": "[IMPLEMENTED] Replace the dinner with tofu stir-fry",
           "request": {
             "method": "POST",
             "header": [
@@ -5999,7 +5999,7 @@
                 "replacement"
               ]
             },
-            "description": "operationId: `replacePlanItem` · path: `/api/v1/plans/{planId}/items/{itemKey}/replacement` · method: `POST`\n\nExpected: HTTP 200. Stories: US-10, US-14.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `replacePlanItem` · path: `/api/v1/plans/{planId}/items/{itemKey}/replacement` · method: `POST`\n\nExpected: HTTP 200. Stories: US-10, US-14.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": {{planVersion}},\n  \"mealId\": 8\n}",
@@ -6077,7 +6077,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Replace with a stale baseVersion",
+          "name": "[IMPLEMENTED] Replace with a stale baseVersion",
           "request": {
             "method": "POST",
             "header": [
@@ -6105,7 +6105,7 @@
                 "replacement"
               ]
             },
-            "description": "operationId: `replacePlanItem` · path: `/api/v1/plans/{planId}/items/{itemKey}/replacement` · method: `POST`\n\nExpected: HTTP 409. Stories: US-10, US-14.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `replacePlanItem` · path: `/api/v1/plans/{planId}/items/{itemKey}/replacement` · method: `POST`\n\nExpected: HTTP 409. Stories: US-10, US-14.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": 1,\n  \"mealId\": 6\n}",
@@ -6183,7 +6183,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Confirm lunch (deviation >= 200 kcal)",
+          "name": "[IMPLEMENTED] Confirm lunch (deviation >= 200 kcal)",
           "request": {
             "method": "POST",
             "header": [
@@ -6211,7 +6211,7 @@
                 "status"
               ]
             },
-            "description": "operationId: `recordPlanItemStatus` · path: `/api/v1/plans/{planId}/items/{itemKey}/status` · method: `POST`\n\nExpected: HTTP 200. Stories: US-13, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `recordPlanItemStatus` · path: `/api/v1/plans/{planId}/items/{itemKey}/status` · method: `POST`\n\nExpected: HTTP 200. Stories: US-13, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"COMPLETED\"\n}",
@@ -6288,7 +6288,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Confirm lunch a second time",
+          "name": "[IMPLEMENTED] Confirm lunch a second time",
           "request": {
             "method": "POST",
             "header": [
@@ -6316,7 +6316,7 @@
                 "status"
               ]
             },
-            "description": "operationId: `recordPlanItemStatus` · path: `/api/v1/plans/{planId}/items/{itemKey}/status` · method: `POST`\n\nExpected: HTTP 409. Stories: US-13, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `recordPlanItemStatus` · path: `/api/v1/plans/{planId}/items/{itemKey}/status` · method: `POST`\n\nExpected: HTTP 409. Stories: US-13, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"COMPLETED\"\n}",
@@ -6394,7 +6394,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Open deviations",
+          "name": "[IMPLEMENTED] Open deviations",
           "request": {
             "method": "GET",
             "header": [
@@ -6416,7 +6416,7 @@
                 "deviations"
               ]
             },
-            "description": "operationId: `listOpenDeviations` · path: `/api/v1/plans/{planId}/deviations` · method: `GET`\n\nExpected: HTTP 200. Stories: US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listOpenDeviations` · path: `/api/v1/plans/{planId}/deviations` · method: `GET`\n\nExpected: HTTP 200. Stories: US-15."
           },
           "event": [
             {
@@ -6475,7 +6475,7 @@
       "description": "Exercise selection and actual workout records (US-12, US-13).",
       "item": [
         {
-          "name": "[PLANNED] Exercises",
+          "name": "[IMPLEMENTED] Exercises",
           "request": {
             "method": "GET",
             "header": [
@@ -6495,7 +6495,7 @@
                 "exercises"
               ]
             },
-            "description": "operationId: `listExercises` · path: `/api/v1/exercises` · method: `GET`\n\nExpected: HTTP 200. Stories: US-12.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listExercises` · path: `/api/v1/exercises` · method: `GET`\n\nExpected: HTTP 200. Stories: US-12."
           },
           "event": [
             {
@@ -6546,7 +6546,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Workouts of 2026-11-16",
+          "name": "[IMPLEMENTED] Workouts of 2026-11-16",
           "request": {
             "method": "GET",
             "header": [
@@ -6572,7 +6572,7 @@
                 }
               ]
             },
-            "description": "operationId: `listActivityEntries` · path: `/api/v1/activity-entries` · method: `GET`\n\nExpected: HTTP 200. Stories: US-13, US-20.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `listActivityEntries` · path: `/api/v1/activity-entries` · method: `GET`\n\nExpected: HTTP 200. Stories: US-13, US-20."
           },
           "event": [
             {
@@ -6629,7 +6629,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Skip the planned workout",
+          "name": "[IMPLEMENTED] Skip the planned workout",
           "request": {
             "method": "POST",
             "header": [
@@ -6653,7 +6653,7 @@
                 "activity-entries"
               ]
             },
-            "description": "operationId: `createActivityEntry` · path: `/api/v1/activity-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-13, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createActivityEntry` · path: `/api/v1/activity-entries` · method: `POST`\n\nExpected: HTTP 201. Stories: US-13, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"exerciseId\": 1,\n  \"planItemKey\": \"{{workoutItemKey}}\",\n  \"status\": \"SKIPPED\",\n  \"durationMin\": null\n}",
@@ -6726,7 +6726,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Completed workout without duration",
+          "name": "[IMPLEMENTED] Completed workout without duration",
           "request": {
             "method": "POST",
             "header": [
@@ -6750,7 +6750,7 @@
                 "activity-entries"
               ]
             },
-            "description": "operationId: `createActivityEntry` · path: `/api/v1/activity-entries` · method: `POST`\n\nExpected: HTTP 400. Stories: US-13, US-15.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createActivityEntry` · path: `/api/v1/activity-entries` · method: `POST`\n\nExpected: HTTP 400. Stories: US-13, US-15.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"date\": \"{{planDate}}\",\n  \"exerciseId\": 2,\n  \"planItemKey\": null,\n  \"status\": \"COMPLETED\",\n  \"durationMin\": null\n}",
@@ -6830,7 +6830,7 @@
       "description": "Dynamic Plan Recovery - proposals, reasons, decisions, no-solution (US-16 to US-19).",
       "item": [
         {
-          "name": "[PLANNED] Generate a recovery proposal",
+          "name": "[IMPLEMENTED] Generate a recovery proposal",
           "request": {
             "method": "POST",
             "header": [
@@ -6856,7 +6856,7 @@
                 "recovery-proposals"
               ]
             },
-            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": {{planVersion}}\n}",
@@ -6934,7 +6934,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Generate a second proposal (for the stale case)",
+          "name": "[IMPLEMENTED] Generate a second proposal (for the stale case)",
           "request": {
             "method": "POST",
             "header": [
@@ -6960,7 +6960,7 @@
                 "recovery-proposals"
               ]
             },
-            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 201. Stories: US-16, US-17, US-19.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": {{planVersion}}\n}",
@@ -7036,7 +7036,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Recovery when nothing is feasible",
+          "name": "[IMPLEMENTED] Recovery when nothing is feasible",
           "request": {
             "method": "POST",
             "header": [
@@ -7062,7 +7062,7 @@
                 "recovery-proposals"
               ]
             },
-            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 422. Stories: US-16, US-17, US-19.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 422. Stories: US-16, US-17, US-19.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": 1\n}",
@@ -7138,7 +7138,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Recovery when it is not required",
+          "name": "[IMPLEMENTED] Recovery when it is not required",
           "request": {
             "method": "POST",
             "header": [
@@ -7164,7 +7164,7 @@
                 "recovery-proposals"
               ]
             },
-            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 409. Stories: US-16, US-17, US-19.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 409. Stories: US-16, US-17, US-19.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"baseVersion\": 1\n}",
@@ -7240,7 +7240,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Recovery for another user's plan",
+          "name": "[IMPLEMENTED] Recovery for another user's plan",
           "request": {
             "method": "POST",
             "header": [
@@ -7266,7 +7266,7 @@
                 "recovery-proposals"
               ]
             },
-            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 403. Stories: US-16, US-17, US-19.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `createRecoveryProposal` · path: `/api/v1/plans/{planId}/recovery-proposals` · method: `POST`\n\nExpected: HTTP 403. Stories: US-16, US-17, US-19.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -7362,7 +7362,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Get the proposal",
+          "name": "[IMPLEMENTED] Get the proposal",
           "request": {
             "method": "GET",
             "header": [
@@ -7383,7 +7383,7 @@
                 "{{proposalId}}"
               ]
             },
-            "description": "operationId: `getRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}` · method: `GET`\n\nExpected: HTTP 200. Stories: US-16, US-17, US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}` · method: `GET`\n\nExpected: HTTP 200. Stories: US-16, US-17, US-18."
           },
           "event": [
             {
@@ -7435,7 +7435,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Get another user's proposal",
+          "name": "[IMPLEMENTED] Get another user's proposal",
           "request": {
             "method": "GET",
             "header": [
@@ -7456,7 +7456,7 @@
                 "{{proposalId}}"
               ]
             },
-            "description": "operationId: `getRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}` · method: `GET`\n\nExpected: HTTP 403. Stories: US-16, US-17, US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `getRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}` · method: `GET`\n\nExpected: HTTP 403. Stories: US-16, US-17, US-18.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -7529,7 +7529,7 @@
           ]
         },
         {
-          "name": "[PLANNED] ACCEPT the proposal",
+          "name": "[PARTIAL] ACCEPT the proposal",
           "request": {
             "method": "POST",
             "header": [
@@ -7555,7 +7555,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"ACCEPT\",\n  \"baseVersion\": {{proposalBaseVersion}}\n}",
@@ -7631,7 +7631,7 @@
           ]
         },
         {
-          "name": "[PLANNED] ACCEPT a stale proposal",
+          "name": "[PARTIAL] ACCEPT a stale proposal",
           "request": {
             "method": "POST",
             "header": [
@@ -7657,7 +7657,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"ACCEPT\",\n  \"baseVersion\": 1\n}",
@@ -7733,7 +7733,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Decide the same proposal again",
+          "name": "[PARTIAL] Decide the same proposal again",
           "request": {
             "method": "POST",
             "header": [
@@ -7759,7 +7759,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 409. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"ACCEPT\",\n  \"baseVersion\": 1\n}",
@@ -7835,7 +7835,7 @@
           ]
         },
         {
-          "name": "[PLANNED] REJECT a proposal",
+          "name": "[PARTIAL] REJECT a proposal",
           "request": {
             "method": "POST",
             "header": [
@@ -7861,7 +7861,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"REJECT\",\n  \"baseVersion\": {{proposalBaseVersion}}\n}",
@@ -7936,7 +7936,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Invalid decision value",
+          "name": "[PARTIAL] Invalid decision value",
           "request": {
             "method": "POST",
             "header": [
@@ -7962,7 +7962,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 400. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 400. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"MAYBE\",\n  \"baseVersion\": 1\n}",
@@ -8064,7 +8064,7 @@
                 "decision"
               ]
             },
-            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.\n\n**BLOCKED by Q12** - the EDIT request shape is provisional and may change.",
+            "description": "operationId: `decideRecoveryProposal` · path: `/api/v1/recovery-proposals/{proposalId}/decision` · method: `POST`\n\nExpected: HTTP 200. Stories: US-18.\n\n**PARTIAL** - implemented with a limitation: PARTIAL - ACCEPT and REJECT are implemented; EDIT returns 400 INVALID_EDIT until Q12 is decided. A proposal is decided once: a repeated decision returns 409 PROPOSAL_ALREADY_DECIDED. Concurrent decisions are serialized; exactly one wins (tested).\n\n**BLOCKED by Q12** - the EDIT request shape is provisional and may change.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"decision\": \"EDIT\",\n  \"baseVersion\": {{proposalBaseVersion}},\n  \"selectedChangeIds\": [\n    \"{{firstChangeId}}\"\n  ]\n}",
@@ -8145,7 +8145,7 @@
       "description": "Day dashboard (US-20). History browsing (US-21) is post-MVP and not part of this contract.",
       "item": [
         {
-          "name": "[PLANNED] Dashboard of 2026-11-16",
+          "name": "[IMPLEMENTED] Dashboard of 2026-11-16",
           "request": {
             "method": "GET",
             "header": [
@@ -8167,7 +8167,7 @@
                 "summary"
               ]
             },
-            "description": "operationId: `getDaySummary` · path: `/api/v1/days/{date}/summary` · method: `GET`\n\nExpected: HTTP 200. Stories: US-20, US-07.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getDaySummary` · path: `/api/v1/days/{date}/summary` · method: `GET`\n\nExpected: HTTP 200. Stories: US-20, US-07."
           },
           "event": [
             {
@@ -8220,7 +8220,7 @@
           ]
         },
         {
-          "name": "[PLANNED] Dashboard with an invalid date",
+          "name": "[IMPLEMENTED] Dashboard with an invalid date",
           "request": {
             "method": "GET",
             "header": [
@@ -8242,7 +8242,7 @@
                 "summary"
               ]
             },
-            "description": "operationId: `getDaySummary` · path: `/api/v1/days/{date}/summary` · method: `GET`\n\nExpected: HTTP 400. Stories: US-20, US-07.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation."
+            "description": "operationId: `getDaySummary` · path: `/api/v1/days/{date}/summary` · method: `GET`\n\nExpected: HTTP 400. Stories: US-20, US-07."
           },
           "event": [
             {
@@ -8301,7 +8301,7 @@
       "name": "Cleanup (destructive, run last)",
       "item": [
         {
-          "name": "[PLANNED] Delete my account (run last)",
+          "name": "[IMPLEMENTED] Delete my account (run last)",
           "request": {
             "method": "DELETE",
             "header": [
@@ -8327,7 +8327,7 @@
                 }
               ]
             },
-            "description": "operationId: `deleteMyAccount` · path: `/api/v1/me` · method: `DELETE`\n\nExpected: HTTP 204. Stories: US-04.\n\n**PLANNED - not implemented yet.** This request documents the contract and cannot pass an integration test until the backend implements the operation.\n\n**Destructive** - deletes the account. Run last."
+            "description": "operationId: `deleteMyAccount` · path: `/api/v1/me` · method: `DELETE`\n\nExpected: HTTP 204. Stories: US-04.\n\n**Destructive** - deletes the account. Run last."
           },
           "event": [
             {

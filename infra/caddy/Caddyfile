@@ -1,0 +1,9 @@
+# Reverse proxy of the public deployment (docker-compose.public.yml): HTTPS via Let's Encrypt for VEYA_DOMAIN.
+{$VEYA_DOMAIN} {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy api:8080
+}

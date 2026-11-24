@@ -13,8 +13,9 @@ the Postman files are generated from it, so all three always agree.
 
 | Group | Count | Can it be called now? |
 |---|---|---|
-| **IMPLEMENTED** — `GET /actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness` | 3 | **Yes** - verified by backend tests (`HealthEndpointTests`) |
-| **PLANNED** — every `/api/v1/...` operation and `/v3/api-docs` | 42 | **No** - no REST controllers exist yet; requests return 404 |
+| **IMPLEMENTED** — health (3), `/v3/api-docs`, reference data, identity (register, login, me, delete, export, consents), profile, daily constraints, nutrition diary / saved meals / totals / meals, exercises and workout records | 31 | **Yes** - verified over real HTTP by the backend API tests (`backend/src/test/java/com/veya/api`), responses validated against `openapi.yaml` |
+| **PARTIAL** — `GET /api/v1/foods` | 1 | **Yes**, local catalogue only: no external provider yet, `providerStatus` is always `UNAVAILABLE`, no 502/504 (AQ-7) |
+| **PLANNED** — plans, meal-plan suggestions, replacement options, item status, deviations, recovery proposals/decisions, day summary | 13 | **No** - no controller yet; requests return 401 without a token, 404 with one |
 | **BLOCKED variant** — `EDIT` decision of a recovery proposal | 1 variant | No - meaning of EDIT is undecided (BA question Q12) |
 | **BLOCKED function** — adding items to an already saved plan | no endpoint | Not specified by the BA (AQ-3) |
 
@@ -229,10 +230,12 @@ the frontend:
 | API client methods (one per `operationId`) and their documentation | Postman runs with real responses |
 | UI states for every documented status/error code | End-to-end tests of UC-01 (NFR-16) |
 | Mocks from the documented examples (e.g. MSW, or an OpenAPI mock server such as Prism - not verified by us) | Performance checks (NFR-01/02/03) |
-| Calling the 3 health endpoints against the running backend | Everything marked PLANNED |
+| Calling every IMPLEMENTED/PARTIAL operation against the running backend | Everything marked PLANNED |
 
 Contract checks already run (2026-11-22): `openapi.yaml` validated with `openapi-spec-validator` 0.7.1 (OpenAPI 3.1);
 every example validated against its schema; negative examples are rejected by the schema; the Postman Collection
 validated against the official Postman v2.1 JSON schema; generated files match the spec
-(`python docs/api/tools/check_contract.py` -> `RESULT: PASSED`). No request against `/api/v1` has been executed,
-because those endpoints do not exist yet.
+(`python docs/api/tools/check_contract.py` -> `RESULT: PASSED`). Backend day 1 (2026-11-22): the IMPLEMENTED
+operations were exercised over real HTTP by 31 API integration tests and a manual smoke run (register -> login ->
+profile -> constraints -> food search -> diary entry -> daily totals -> 401/403 checks); PLANNED operations have not
+been executed because they do not exist yet.
