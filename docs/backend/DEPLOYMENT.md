@@ -1,12 +1,12 @@
 # VEYA — deployment
 
-Status 2026-11-23:
+Status 2026-11-24 (public deployment added; local and CI status from 2026-11-23):
 
 | Environment | Status | Evidence |
 |---|---|---|
 | Local Docker (PostgreSQL 17 + API container, profile `prod`) | **VERIFIED** | both containers `healthy`; smoke test `infra/smoke/smoke-test.ps1` passed all 35 HTTP checks and the database row checks against the container (Windows PowerShell 5.1 and PowerShell 7) |
 | CI (GitHub Actions job `image`) | **VERIFIED** | [CI run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348): image built, Compose stack started, smoke test passed |
-| **Public internet** | **NOT VERIFIED** | no cloud account / server / DNS available to the developer session; configuration below is ready |
+| **Public internet** | **VERIFIED** (external health and access checks, §5) | https://veya-api-demo.duckdns.org — AWS EC2, Docker Compose (API, PostgreSQL 17, Caddy), HTTPS via Let's Encrypt; the full smoke test has not been run against the public instance |
 
 ## 1. What is deployed
 
@@ -70,6 +70,31 @@ Manual actions required (need the account owner; not possible from this session)
    Test-NetConnection veya-api.<your-domain> -Port 5432                      # must FAIL (database not public)
    ```
 5. Record the public URL and the outputs in the submission.
+
+## 5. Actual public deployment (2026-11-24)
+
+| Item | Value |
+|---|---|
+| Public API URL | **https://veya-api-demo.duckdns.org** |
+| Host | AWS EC2 `c7i-flex.large`, Ubuntu 24.04 LTS |
+| Stack | `infra/docker-compose.yml` + `infra/docker-compose.public.yml` (`--profile app`): Spring Boot API, PostgreSQL 17, Caddy |
+| DNS / TLS | DuckDNS name, automatic HTTPS by Caddy (Let's Encrypt) |
+| Exposure | only Caddy (80/443) is public; PostgreSQL and the API publish no ports |
+
+External verification (clients outside AWS; read-only requests, no test data written):
+
+| Check | Result |
+|---|---|
+| HTTPS connection | works; certificate issued by Let's Encrypt (issuer `YE1`), valid until 2027-02-22; `Strict-Transport-Security` header present |
+| `GET /actuator/health/readiness` | `200 {"status":"UP"}` |
+| `GET /v3/api-docs` | `200 application/json`, OpenAPI 3.1.0, 45 operations — identical to `docs/api/openapi.yaml` in the repository |
+| `GET /api/v1/me` without token | `401 application/problem+json`, `WWW-Authenticate: Bearer` |
+| `http://` request | `308` redirect to `https://` |
+| TCP 5432, 5433, 8080 from outside | not reachable (closed/filtered) |
+
+Checked by the developer from a Windows computer and again on 2026-11-24 14:47 UTC with `curl.exe` and a PowerShell
+TCP test (commands in §4 step 4). Not yet done against the public instance: the end-to-end smoke test
+(`infra/smoke/smoke-test.ps1 -BaseUrl https://veya-api-demo.duckdns.org`), which creates and deletes demo accounts.
 
 Security notes: PostgreSQL and the API have no public ports; TLS terminates at Caddy; secrets live only in
 `infra/.env` on the server (mode 600, created by the script); the demo seed data is never loaded automatically.

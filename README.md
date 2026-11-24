@@ -13,9 +13,11 @@ Diploma project, European Humanities University (2026).
 
 Evidence (2026-11-23): 45 API operations (44 implemented, 1 partial: EDIT blocked by open question Q12);
 `mvnw verify` → 264 tests, 0 failures; JaCoCo 95.0 % lines / 82.8 % branches overall, 95.2 % / 86.0 % business logic;
-Docker deployment (PostgreSQL + API) verified locally with an end-to-end smoke test (35 HTTP checks + persisted-row checks in PostgreSQL).
+Docker deployment (PostgreSQL + API) verified locally with an end-to-end smoke test (35 HTTP checks + persisted-row checks in PostgreSQL); public deployment checked externally (HTTPS, health, contract, closed database ports).
 CI: [GitHub Actions run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348) — all jobs green.
-**Public deployment: NOT VERIFIED** (configuration and checklist in `DEPLOYMENT.md`).
+**Live API (public deployment, AWS EC2 + Docker Compose + HTTPS): https://veya-api-demo.duckdns.org** — health:
+[`/actuator/health/readiness`](https://veya-api-demo.duckdns.org/actuator/health/readiness), contract: [`/v3/api-docs`](https://veya-api-demo.duckdns.org/v3/api-docs);
+verified externally 2026-11-24 (details in [`DEPLOYMENT.md` §5](docs/backend/DEPLOYMENT.md#5-actual-public-deployment-2026-11-24)).
 
 Verify everything yourself (Windows PowerShell, Docker Desktop running, JDK 21):
 

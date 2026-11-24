@@ -169,6 +169,6 @@ exactly one wins).
 | AQ-5 token lifetime / refresh | 60 min, no refresh (proposed) |
 | AQ-7 food provider | Open Food Facts adapter implemented and tested against a stub, **disabled by default**; not verified against the live service in CI |
 | AQ-13 rule 3, AQ-14 target range | implemented as proposed (configurable tolerance, default ±20 %) |
-| Public deployment | configuration ready, **not verified** (no cloud account available) — see [`DEPLOYMENT.md`](DEPLOYMENT.md) |
+| Public deployment | **live** at https://veya-api-demo.duckdns.org (AWS EC2, verified externally 2026-11-24); deployment is manual (no CD step) — see [`DEPLOYMENT.md`](DEPLOYMENT.md) |
 | Frontend | not part of this repository yet (`frontend/` has only a README) |
 | Caching | not added: the only cache candidate (catalogue, 24 foods / 12 meals) is read in < 5 ms; no measured need |

@@ -1,6 +1,6 @@
 # Assessment matrix — BACK-END (Stage 3)
 
-Verified 2026-11-23. PASS = implemented **and** verified by the command/result shown. Commands from the repository root
+Verified 2026-11-23; public deployment (row 13) verified externally 2026-11-24. PASS = implemented **and** verified by the command/result shown. Commands from the repository root
 (Windows PowerShell) unless noted; `verify` = `cd backend; .\mvnw.cmd clean verify`.
 
 ## Minimum requirements
@@ -19,7 +19,7 @@ Verified 2026-11-23. PASS = implemented **and** verified by the command/result s
 | 10 | RFC 9457 Problem Details, stable error codes | PASS | `GlobalExceptionHandler`, `ErrorCode`, `ProblemAuthenticationEntryPoint` | `assertProblem(...)` in API tests; `SharedUnitTest.errorCodes` | every error has `type`, `code`, `traceId` | — |
 | 11 | OpenAPI documentation | PASS | `GET /v3/api-docs`, `docs/api/` | `SystemApiTests.apiDocsServeThePublishedContract`; `python docs/api/tools/check_contract.py` | identical to the contract; RESULT: PASSED | — |
 | 12 | Structured logging of important operations and errors, no sensitive data | PASS | `RequestIdFilter`, service INFO events, ECS JSON in `prod` | `docker logs veya-api`; grep for secrets | JSON lines with `requestId`; 0 matches for password/secret/Bearer | — |
-| 13 | Production-like environment accessible to **external** users | **PARTIAL** | `backend/Dockerfile`, `infra/docker-compose.yml` (`--profile app`), `infra/docker-compose.public.yml`, `infra/caddy/Caddyfile`, [DEPLOYMENT.md](DEPLOYMENT.md) | local: Compose + smoke test | local Docker deployment healthy, smoke test 35/35 HTTP checks + DB row checks passed; **PUBLIC DEPLOYMENT NOT VERIFIED** | create a VM + DNS, run DEPLOYMENT.md §4, record URL |
+| 13 | Production-like environment accessible to **external** users | **PASS** | https://veya-api-demo.duckdns.org (AWS EC2, Docker Compose: API + PostgreSQL 17 + Caddy/HTTPS); `backend/Dockerfile`, `infra/docker-compose.public.yml`, `infra/caddy/Caddyfile`, [DEPLOYMENT.md §5](DEPLOYMENT.md#5-actual-public-deployment-2026-11-24) | external `curl.exe https://veya-api-demo.duckdns.org/actuator/health/readiness`; `/v3/api-docs`; TCP test of 5432/5433/8080 | readiness `200 UP` over valid HTTPS; api-docs identical to the repository contract; 401 Problem Details without token; DB/API ports not reachable from outside | optional: run the smoke test against the public URL |
 | 14 | Dockerfile, reproducible app + DB deployment, env secrets, health checks, docs | PASS | Dockerfile (non-root, HEALTHCHECK), Compose with healthchecks, `generate-env.sh` | `docker compose ... --profile app up -d --build` | `veya-api healthy`, `veya-postgres healthy` | — |
 | 15 | ≥ 70 % coverage of business logic (JaCoCo), HTML report, CI gate | PASS | JaCoCo in `pom.xml`, gate in `verify`; CI artifact | `verify`; `jacoco:check@check -Dcoverage.business.branch=0.95` | business logic **95.2 % lines / 86.0 % branches**; gate fails (exit 1) at 95 % | — |
 | 16 | No hard-coded secrets | PASS | env only; random test secrets | `git grep -nE "(password|secret)\s*[:=]\s*\S{8,}"` on the change set | no real secrets | — |
@@ -27,14 +27,14 @@ Verified 2026-11-23. PASS = implemented **and** verified by the command/result s
 | 18 | No known critical dependency vulnerabilities | PASS (point in time) | `.github/scripts/osv_check.py` | OSV query of 107 runtime dependencies, locally and in [CI](https://github.com/Atikin96/veya/actions/runs/45391042348) | 0 known vulnerabilities (2026-11-23/24) | re-run regularly |
 | 19 | No custom cryptography | PASS | Spring Security / Nimbus JOSE / BCrypt only | code review | — | — |
 | 20 | JSON as main format | PASS | `application/json`, `application/problem+json` | API tests check content types | — | — |
-| 21 | Reproducible deployment from Git, maintainable docs | PASS (local) | README, this folder | clone → `generate-env.sh` → Compose → smoke | verified on Windows | public run |
+| 21 | Reproducible deployment from Git, maintainable docs | PASS | README, this folder, [DEPLOYMENT.md](DEPLOYMENT.md) | clone → `generate-env.sh` → Compose (locally; on EC2 with the public override) | local stack + smoke test passed; public EC2 deployment from the same repository is up | — |
 
 ## Maximum-grade items
 
 | Requirement | Status | Evidence / result | Remaining |
 |---|---|---|---|
 | Automated Docker image build (CI) | PASS | job `image` in [CI run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348): build + Compose + smoke test green | — |
-| Automated deployment (CD) | NOT IMPLEMENTED | no target environment/credentials | add deploy step once a server exists |
+| Automated deployment (CD) | NOT IMPLEMENTED | the EC2 deployment was done manually with Docker Compose; no deploy step in CI | add an SSH/registry deploy step |
 | Quality gates | PASS | coverage gate, javac `-Xlint:all -Werror`, contract check, OSV check, generated-docs diff check | — |
 | Request IDs + structured logs | PASS | `X-Request-Id`, MDC, `traceId`, ECS JSON | — |
 | Monitoring (Micrometer/Actuator) | PARTIAL | health/liveness/readiness, `/actuator/metrics` (authenticated) | no Prometheus/Grafana (not justified for the MVP) |
