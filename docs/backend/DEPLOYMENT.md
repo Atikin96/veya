@@ -5,7 +5,7 @@ Status 2026-11-23:
 | Environment | Status | Evidence |
 |---|---|---|
 | Local Docker (PostgreSQL 17 + API container, profile `prod`) | **VERIFIED** | both containers `healthy`; smoke test `infra/smoke/smoke-test.ps1` passed all 35 HTTP checks and the database row checks against the container (Windows PowerShell 5.1 and PowerShell 7) |
-| CI (GitHub Actions job `image`) | configured | builds the image, starts the Compose stack, runs the same smoke test |
+| CI (GitHub Actions job `image`) | **VERIFIED** | [CI run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348): image built, Compose stack started, smoke test passed |
 | **Public internet** | **NOT VERIFIED** | no cloud account / server / DNS available to the developer session; configuration below is ready |
 
 ## 1. What is deployed

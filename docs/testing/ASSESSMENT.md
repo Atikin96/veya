@@ -16,7 +16,7 @@ BUILD SUCCESS, all coverage checks met**. Details: [`README.md`](README.md).
 | 4d | Integration: application configuration | PASS | `VeyaApplicationTests`, `HealthEndpointTests`, `SystemApiTests` (CORS, api-docs), `IdentityUnitTest` (secret validation) | `verify` | all pass | — |
 | 4e | Integration: transaction consistency | PASS | `RecoveryApiTests.acceptIsAtomic`, `concurrentDecisions`, `RecoveryDecisionTests`, rejected requests leave no rows | `verify` | rollback and serialization verified | — |
 | 5 | UI tests (if a frontend exists) | NOT APPLICABLE | `frontend/` contains only a README — no UI exists in this repository | — | — | add with the React client |
-| 6 | All automated tests in GitHub Actions | PASS (configured) | `.github/workflows/backend.yml` jobs `contract`, `build`, `image` | push to GitHub | **not yet run** for this change set (not pushed) | push, link the green run |
+| 6 | All automated tests in GitHub Actions | PASS | `.github/workflows/backend.yml` jobs `contract`, `build`, `image` | [CI run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348) (commit `97c2ae3`) | all 3 jobs green; artifact `test-reports`: 264 tests, 0 failures/errors/skipped | — |
 | 7 | Testing strategy documentation | PASS | [`README.md`](README.md) §1–§8 | — | — | — |
 | 8 | Consistent naming and organization | PASS | unit `*Test` + `@Tag("unit")`, integration `*Tests`; `@DisplayName` with story ids | — | — | — |
 
@@ -32,7 +32,7 @@ BUILD SUCCESS, all coverage checks met**. Details: [`README.md`](README.md).
 | OpenAPI contract tests | PASS | schema validation of every API response; `OpenApiContractTests`; `check_contract.py` in CI |
 | Property-based / mutation testing | NOT IMPLEMENTED | replaced by parameterized boundary tests; PIT/jqwik not added within the deadline |
 | CI quality gates | PASS | coverage gate, `-Xlint -Werror`, contract check, OSV check, docs diff |
-| Coverage artifacts | PASS (configured) | CI artifacts `jacoco-coverage-report`, `test-reports` |
+| Coverage artifacts | PASS | [CI run](https://github.com/Atikin96/veya/actions/runs/45391042348): `jacoco-coverage-report` (HTML/XML/CSV: 95.0 % lines, 82.8 % branches) and `test-reports` |
 | Static analysis | PARTIAL | javac lint as errors; no SpotBugs/Sonar |
 | Realistic performance tests | NOT IMPLEMENTED | NFR-01/02 not measured under load; the engine is bounded (≤ 100 candidates, ≤ 50 000 combinations) |
 | Defects found by tests explained | PASS | [`README.md` §7](README.md#7-defects-found-by-the-tests-and-fixed) — 8 real defects with fixes |

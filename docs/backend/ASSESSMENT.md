@@ -24,7 +24,7 @@ Verified 2026-11-23. PASS = implemented **and** verified by the command/result s
 | 15 | ≥ 70 % coverage of business logic (JaCoCo), HTML report, CI gate | PASS | JaCoCo in `pom.xml`, gate in `verify`; CI artifact | `verify`; `jacoco:check@check -Dcoverage.business.branch=0.95` | business logic **95.2 % lines / 86.0 % branches**; gate fails (exit 1) at 95 % | — |
 | 16 | No hard-coded secrets | PASS | env only; random test secrets | `git grep -nE "(password|secret)\s*[:=]\s*\S{8,}"` on the change set | no real secrets | — |
 | 17 | Modern password hashing | PASS | BCrypt cost 12 (`SecurityConfig`) | `IdentityApiTests.registerCreatesAccount` | hash `$2a$12$…` stored | — |
-| 18 | No known critical dependency vulnerabilities | PASS (point in time) | `.github/scripts/osv_check.py` | OSV query of 107 runtime dependencies | 0 known vulnerabilities (2026-11-23) | re-run in CI |
+| 18 | No known critical dependency vulnerabilities | PASS (point in time) | `.github/scripts/osv_check.py` | OSV query of 107 runtime dependencies, locally and in [CI](https://github.com/Atikin96/veya/actions/runs/45391042348) | 0 known vulnerabilities (2026-11-23/24) | re-run regularly |
 | 19 | No custom cryptography | PASS | Spring Security / Nimbus JOSE / BCrypt only | code review | — | — |
 | 20 | JSON as main format | PASS | `application/json`, `application/problem+json` | API tests check content types | — | — |
 | 21 | Reproducible deployment from Git, maintainable docs | PASS (local) | README, this folder | clone → `generate-env.sh` → Compose → smoke | verified on Windows | public run |
@@ -33,7 +33,7 @@ Verified 2026-11-23. PASS = implemented **and** verified by the command/result s
 
 | Requirement | Status | Evidence / result | Remaining |
 |---|---|---|---|
-| Automated Docker image build (CI) | PASS (configured) | job `image`: build + Compose + smoke test | first green run after push |
+| Automated Docker image build (CI) | PASS | job `image` in [CI run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348): build + Compose + smoke test green | — |
 | Automated deployment (CD) | NOT IMPLEMENTED | no target environment/credentials | add deploy step once a server exists |
 | Quality gates | PASS | coverage gate, javac `-Xlint:all -Werror`, contract check, OSV check, generated-docs diff check | — |
 | Request IDs + structured logs | PASS | `X-Request-Id`, MDC, `traceId`, ECS JSON | — |

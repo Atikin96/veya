@@ -109,8 +109,10 @@ defensive code (e.g. `InterruptedException` handling).
 | `build` | static check (javac `-Xlint:all -Werror`); **unit tests**; **integration tests + JaCoCo report + coverage gate** (`verify`); coverage summary in the job summary; artifacts `test-reports`, `jacoco-coverage-report`; OSV dependency vulnerability check |
 | `image` | build the Docker image, start PostgreSQL + API with Compose, wait for readiness, run the end-to-end smoke test |
 
-Note: the workflow is committed with this stage; its first run on GitHub happens after the push, so CI results are
-evidence only once that run is green (link it in the submission).
+Evidence: [CI run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348) for commit `97c2ae3` — jobs `contract`, `build` and `image` all succeeded;
+the downloaded artifacts contain 264 tests (0 failures, 0 errors, 0 skipped) and the JaCoCo report with the same
+coverage as locally (95.0 % / 82.8 % overall, 95.2 % / 86.0 % business logic); the `image` job built the Docker image,
+started PostgreSQL + API and passed the end-to-end smoke test in PowerShell 7 on Linux.
 
 ## 7. Defects found by the tests (and fixed)
 

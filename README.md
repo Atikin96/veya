@@ -14,7 +14,8 @@ Diploma project, European Humanities University (2026).
 Evidence (2026-11-23): 45 API operations (44 implemented, 1 partial: EDIT blocked by open question Q12);
 `mvnw verify` → 264 tests, 0 failures; JaCoCo 95.0 % lines / 82.8 % branches overall, 95.2 % / 86.0 % business logic;
 Docker deployment (PostgreSQL + API) verified locally with an end-to-end smoke test (35 HTTP checks + persisted-row checks in PostgreSQL).
-**Public deployment: not verified** (configuration and checklist in `DEPLOYMENT.md`).
+CI: [GitHub Actions run 45391042348](https://github.com/Atikin96/veya/actions/runs/45391042348) — all jobs green.
+**Public deployment: NOT VERIFIED** (configuration and checklist in `DEPLOYMENT.md`).
 
 Verify everything yourself (Windows PowerShell, Docker Desktop running, JDK 21):
 
